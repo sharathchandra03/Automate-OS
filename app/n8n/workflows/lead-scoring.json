@@ -1,0 +1,45 @@
+{
+  "name": "AutomateOS — Lead Scoring",
+  "nodes": [
+    {
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "0 2 * * *" }] } },
+      "position": [240, 300]
+    },
+    {
+      "name": "Get Leads",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.APP_URL}}/api/leads?org_id={{$env.ORG_ID}}",
+        "authentication": "genericCredentialType"
+      },
+      "position": [460, 300]
+    },
+    {
+      "name": "Score Leads",
+      "type": "n8n-nodes-base.code",
+      "parameters": {
+        "jsCode": "const leads = $input.all().map(i => i.json);\nreturn leads.map(lead => {\n  let score = 50;\n  const daysSince = lead.last_contacted_at\n    ? Math.floor((Date.now() - new Date(lead.last_contacted_at).getTime()) / 86400000)\n    : 30;\n  score -= Math.floor(daysSince / 3);\n  if (lead.channel === 'whatsapp') score += 10;\n  if (lead.status === 'qualified') score += 20;\n  if (lead.status === 'cold') score -= 10;\n  return { json: { lead_id: lead.id, score: Math.max(0, Math.min(100, score)) } };\n});"
+      },
+      "position": [680, 300]
+    },
+    {
+      "name": "Post Score",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.APP_URL}}/api/webhooks/n8n",
+        "jsonBody": true,
+        "body": "{\"event\":\"lead.scored\",\"lead_id\":\"{{$json.lead_id}}\",\"score\":{{$json.score}}}"
+      },
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Schedule": { "main": [[{ "node": "Get Leads", "type": "main", "index": 0 }]] },
+    "Get Leads": { "main": [[{ "node": "Score Leads", "type": "main", "index": 0 }]] },
+    "Score Leads": { "main": [[{ "node": "Post Score", "type": "main", "index": 0 }]] }
+  }
+}

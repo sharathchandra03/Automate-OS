@@ -1,0 +1,47 @@
+{
+  "name": "AutomateOS — Retargeting",
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": { "httpMethod": "POST", "path": "retargeting-run" },
+      "position": [240, 300]
+    },
+    {
+      "name": "Get Lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.APP_URL}}/api/leads/{{$json.lead_id}}"
+      },
+      "position": [460, 300]
+    },
+    {
+      "name": "Send Re-engagement",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.APP_URL}}/api/comms/send",
+        "jsonBody": true,
+        "body": "{\"to\":\"{{$json.phone}}\",\"text\":\"Hi {{$json.name}}, we miss you! Reply YES to reconnect.\",\"channel\":\"whatsapp\",\"creditType\":\"broadcast\"}"
+      },
+      "position": [680, 300]
+    },
+    {
+      "name": "Log Followup",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.APP_URL}}/api/webhooks/n8n",
+        "jsonBody": true,
+        "body": "{\"event\":\"followup.sent\",\"lead_id\":\"{{$json.lead_id}}\"}"
+      },
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Get Lead", "type": "main", "index": 0 }]] },
+    "Get Lead": { "main": [[{ "node": "Send Re-engagement", "type": "main", "index": 0 }]] },
+    "Send Re-engagement": { "main": [[{ "node": "Log Followup", "type": "main", "index": 0 }]] }
+  }
+}

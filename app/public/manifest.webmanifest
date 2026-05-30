@@ -1,0 +1,23 @@
+{
+  "name": "AutomateOS",
+  "short_name": "AutomateOS",
+  "description": "One platform. Many business types. One simple interface. Many automations.",
+  "start_url": "/overview",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d12",
+  "theme_color": "#6366f1",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any",       "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/favicon.svg", "sizes": "192x192",   "type": "image/svg+xml" },
+    { "src": "/favicon.svg", "sizes": "512x512",   "type": "image/svg+xml" }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "shortcuts": [
+    { "name": "Overview",   "url": "/overview",     "icons": [{ "src": "/favicon.svg", "sizes": "192x192", "type": "image/svg+xml" }] },
+    { "name": "Inbox",      "url": "/inbox",        "icons": [{ "src": "/favicon.svg", "sizes": "192x192", "type": "image/svg+xml" }] },
+    { "name": "Insights",   "url": "/insights",     "icons": [{ "src": "/favicon.svg", "sizes": "192x192", "type": "image/svg+xml" }] },
+    { "name": "Copilot",    "url": "/ai-assistant", "icons": [{ "src": "/favicon.svg", "sizes": "192x192", "type": "image/svg+xml" }] }
+  ]
+}

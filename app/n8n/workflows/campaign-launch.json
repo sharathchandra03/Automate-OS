@@ -1,0 +1,61 @@
+{
+  "name": "AutomateOS — Campaign Launch",
+  "nodes": [
+    {
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "campaign-launch",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "position": [240, 300]
+    },
+    {
+      "name": "Fetch Audience",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "GET",
+        "url": "={{$env.APP_URL}}/api/campaigns/{{$json.campaign_id}}/audience",
+        "authentication": "genericCredentialType",
+        "options": {}
+      },
+      "position": [460, 300]
+    },
+    {
+      "name": "Split Per Contact",
+      "type": "n8n-nodes-base.splitInBatches",
+      "parameters": { "batchSize": 1 },
+      "position": [680, 300]
+    },
+    {
+      "name": "Send Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.APP_URL}}/api/comms/send",
+        "jsonBody": true,
+        "body": "{\"to\":\"{{$json.phone}}\",\"text\":\"{{$json.template_body}}\",\"channel\":\"{{$json.channel}}\",\"creditType\":\"broadcast\"}"
+      },
+      "position": [900, 300]
+    },
+    {
+      "name": "Log Delivered",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.APP_URL}}/api/webhooks/n8n",
+        "jsonBody": true,
+        "body": "{\"event\":\"campaign.delivered\",\"campaign_id\":\"{{$json.campaign_id}}\"}"
+      },
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": { "main": [[{ "node": "Fetch Audience", "type": "main", "index": 0 }]] },
+    "Fetch Audience": { "main": [[{ "node": "Split Per Contact", "type": "main", "index": 0 }]] },
+    "Split Per Contact": { "main": [[{ "node": "Send Message", "type": "main", "index": 0 }]] },
+    "Send Message": { "main": [[{ "node": "Log Delivered", "type": "main", "index": 0 }]] }
+  }
+}
