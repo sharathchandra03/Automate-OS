@@ -10,10 +10,10 @@
 | Week 2 | Security + Tests + API Keys | `week2/security-tests-apikeys` | ✅ Complete |
 | Week 3 | Inbox + Real-time Messaging | `week3/inbox-realtime` | ✅ Complete |
 | Week 4 | Campaigns + Automation | `week4/campaigns-automation` | ✅ Complete |
-| Week 5 | Billing + Stripe | `week5/billing-stripe` | 🔲 Next |
-| Week 6 | Settings + Knowledge Base | `week6/settings-knowledge` | 🔲 Planned |
-| Week 7 | AI Insights + Dashboard | `week7/ai-insights-dashboard` | 🔲 Planned |
-| Week 8 | Polish + Production Launch | `week8/polish-launch` | 🔲 Planned |
+| Week 5 | Billing + Stripe | `week5/billing-stripe` | ✅ Complete |
+| Week 6 | Settings + Knowledge Base | `week6/settings-knowledge` | ✅ Complete |
+| Week 7 | AI Insights + Dashboard | `week7/ai-insights-dashboard` | ✅ Complete |
+| Week 8 | Polish + Production Launch | `week8/polish-launch` | 🔲 Next |
 
 ## What Each Week Delivers
 
@@ -25,16 +25,24 @@
 
 **Week 4 (Done):** Campaign builder reads/writes live Supabase data, automations toggle persisted to DB, retargeting page wired to real leads, campaign status transition tests passing.
 
-**Week 5:** Stripe checkout + webhooks, subscription table, plan limit enforcement on credits + API calls, billing page live metering.
+**Week 5 (Done):** Stripe checkout + webhooks, subscription table, plan limit enforcement on credits + API calls, billing page live metering.
 
-**Week 6:** Logo upload (Supabase Storage), brand color + AI tone saved per org, knowledge base CRUD to DB, team member invite + role management.
+**Week 6 (Done):** Logo upload (Supabase Storage), brand color + AI tone saved per org, knowledge base CRUD to DB, team member invite + role management via Supabase Auth admin.
 
-**Week 7:** Overview dashboard aggregated from real tables (not MOCK constants), AI insights from live lead/conversation data, reports page, AI assistant context-aware.
+**Week 7 (Done):** `getDashboardSummary()` queries leads/conversations/messages/wallet directly; overview page live stat grid with skeletons; `/api/insights/trends` + `daily_lead_counts` RPC; insights page 30-day BarChart; `/api/ai/chat` fetches lead context before LLM call; `buildSystemPrompt(context)` added; AI assistant + widget route through server API; `/api/reports/summary` serves status breakdown + top leads; reports page PieChart + ranked table; 3 prompt-builder unit tests passing.
 
 **Week 8:** Error boundaries on all pages, skeleton loaders, mobile audit, Sentry integration, production deploy checklist, rate limiting on public routes.
 
-## Open Concerns (from CONCERNS.md — not yet addressed)
-- **#5** Channel credentials in plaintext → Week 2
-- **#15** No tests → Week 2
-- **#18** Billing disconnected → Week 5
-- **#19** Settings branding placeholder → Week 6
+## Open Concerns (from CONCERNS.md)
+- **#5** Channel credentials in plaintext → ✅ Resolved in Week 2 (`encrypt_credential` SQL)
+- **#15** No tests → ✅ Resolved in Week 2 (Vitest suite, now 18+ tests)
+- **#18** Billing disconnected → ✅ Resolved in Week 5 (Stripe checkout + webhooks)
+- **#19** Settings branding placeholder → ✅ Resolved in Week 6 (logo, brand color, AI tone persisted)
+
+## Remaining for Week 8
+- Error boundaries on all pages
+- Skeleton loaders audit
+- Mobile responsiveness audit
+- Sentry integration
+- Rate limiting on public routes
+- Production deploy checklist
