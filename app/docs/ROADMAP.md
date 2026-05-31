@@ -13,7 +13,7 @@
 | Week 5 | Billing + Stripe | `week5/billing-stripe` | ✅ Complete |
 | Week 6 | Settings + Knowledge Base | `week6/settings-knowledge` | ✅ Complete |
 | Week 7 | AI Insights + Dashboard | `week7/ai-insights-dashboard` | ✅ Complete |
-| Week 8 | Polish + Production Launch | `week8/polish-launch` | 🔲 Next |
+| Week 8 | Polish + Production Launch | `week8/polish-launch` | ✅ Complete |
 
 ## What Each Week Delivers
 
@@ -31,7 +31,7 @@
 
 **Week 7 (Done):** `getDashboardSummary()` queries leads/conversations/messages/wallet directly; overview page live stat grid with skeletons; `/api/insights/trends` + `daily_lead_counts` RPC; insights page 30-day BarChart; `/api/ai/chat` fetches lead context before LLM call; `buildSystemPrompt(context)` added; AI assistant + widget route through server API; `/api/reports/summary` serves status breakdown + top leads; reports page PieChart + ranked table; 3 prompt-builder unit tests passing.
 
-**Week 8:** Error boundaries on all pages, skeleton loaders, mobile audit, Sentry integration, production deploy checklist, rate limiting on public routes.
+**Week 8 (Done):** Error boundaries (`error.tsx`) on dashboard root, leads, inbox, and billing routes; `SkeletonCard/SkeletonTable/SkeletonStatGrid` components wired to overview, leads, and inbox; `rateLimit()` sliding-window applied to leads webhook (60/min) and WhatsApp webhook (120/min); `@sentry/nextjs` installed with client/server/edge configs; `next.config.mjs` wrapped with `withSentryConfig`; mobile Kanban overflow fixed; inbox single-panel mobile with back button; `validateEnv()` at server startup; `docs/DEPLOY.md` full production checklist. 18/18 tests passing.
 
 ## Open Concerns (from CONCERNS.md)
 - **#5** Channel credentials in plaintext → ✅ Resolved in Week 2 (`encrypt_credential` SQL)
@@ -39,10 +39,6 @@
 - **#18** Billing disconnected → ✅ Resolved in Week 5 (Stripe checkout + webhooks)
 - **#19** Settings branding placeholder → ✅ Resolved in Week 6 (logo, brand color, AI tone persisted)
 
-## Remaining for Week 8
-- Error boundaries on all pages
-- Skeleton loaders audit
-- Mobile responsiveness audit
-- Sentry integration
-- Rate limiting on public routes
-- Production deploy checklist
+## All 8 Weeks Complete 🚀
+
+The full roadmap is delivered. See [DEPLOY.md](DEPLOY.md) for the production go-live checklist.
