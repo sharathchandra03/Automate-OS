@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     case "customer.subscription.updated":
     case "customer.subscription.deleted": {
-      const sub = event.data.object as {
+      const sub = event.data.object as unknown as {
         id: string; status: string; cancel_at_period_end: boolean;
         current_period_end: number; items: { data: { price: { id: string } }[] };
       };
