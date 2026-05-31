@@ -370,6 +370,35 @@ alter publication supabase_realtime add table public.messages;
 alter publication supabase_realtime add table public.conversations;
 
 -- =============================================================================
+-- SUBSCRIPTIONS — Stripe subscription state per org
+-- =============================================================================
+
+create table if not exists public.subscriptions (
+  id                    uuid primary key default gen_random_uuid(),
+  organization_id       uuid not null unique references public.organizations(id) on delete cascade,
+  stripe_customer_id    text,
+  stripe_subscription_id text unique,
+  plan                  text not null default 'free' check (plan in ('free','starter','growth','pro')),
+  status                text not null default 'active' check (status in ('active','past_due','canceled','trialing')),
+  current_period_end    timestamptz,
+  cancel_at_period_end  boolean not null default false,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now()
+);
+
+create index if not exists idx_subscriptions_org    on public.subscriptions(organization_id);
+create index if not exists idx_subscriptions_stripe on public.subscriptions(stripe_subscription_id);
+
+alter table public.subscriptions enable row level security;
+
+create policy "org members select subscriptions"
+  on public.subscriptions for select
+  using (organization_id = public.my_org_id());
+
+-- Denormalized fast-lookup plan column on organizations
+alter table public.organizations add column if not exists plan text not null default 'free';
+
+-- =============================================================================
 -- SEED: Platform admin org (optional — remove before production)
 -- =============================================================================
 
