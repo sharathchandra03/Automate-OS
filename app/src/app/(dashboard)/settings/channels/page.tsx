@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import {
@@ -29,13 +29,10 @@ type FormData = {
   provider: OrgChannel["provider"];
   label: string;
   phone_number: string;
-  // WhatsApp
   waba_id: string;
   phone_number_id: string;
   access_token: string;
-  // Telegram
   bot_token: string;
-  // Twilio
   twilio_account_sid: string;
   twilio_auth_token: string;
   twilio_from_number: string;
@@ -81,22 +78,22 @@ function ChannelForm({ initial, onSave, onClose }: {
 
   const Field = ({ label, field, placeholder, type = "text" }: { label: string; field: keyof FormData; placeholder: string; type?: string }) => (
     <div>
-      <label className="mb-1 block text-xs font-medium text-gray-600">{label}</label>
+      <label className="mb-1 block text-xs font-medium text-muted-foreground">{label}</label>
       <input value={form[field] as string} onChange={set(field)} placeholder={placeholder} type={type}
-        className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+        className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
     </div>
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 overflow-y-auto py-6">
-      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto py-6">
+      <div className="w-full max-w-lg rounded-2xl bg-card border border-border p-6 shadow-2xl mx-4">
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-900">{initial ? "Edit Channel" : "Connect Channel"}</h2>
-          <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"><X className="h-4 w-4" /></button>
+          <h2 className="text-base font-semibold text-foreground">{initial ? "Edit Channel" : "Connect Channel"}</h2>
+          <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground hover:bg-muted"><X className="h-4 w-4" /></button>
         </div>
 
         {err && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-600 dark:text-red-400">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" />{err}
           </div>
         )}
@@ -105,13 +102,13 @@ function ChannelForm({ initial, onSave, onClose }: {
           {/* Provider selector */}
           {!initial && (
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-600">Channel Type</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">Channel Type</label>
               <div className="grid grid-cols-2 gap-2">
                 {(Object.keys(PROVIDER_META) as OrgChannel["provider"][]).map((p) => {
                   const m = PROVIDER_META[p];
                   return (
                     <button key={p} onClick={() => { setProvider(p); setForm((f) => ({ ...f, provider: p })); }}
-                      className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition-all ${provider === p ? "border-green-500 bg-green-50 text-green-700" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}>
+                      className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm font-medium transition-all ${provider === p ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400" : "border-border text-muted-foreground hover:border-border/80 hover:bg-muted"}`}>
                       <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${m.bg} shrink-0`}>
                         <span className="text-white scale-75">{m.icon}</span>
                       </span>
@@ -128,7 +125,7 @@ function ChannelForm({ initial, onSave, onClose }: {
           {/* WhatsApp fields */}
           {provider === "whatsapp" && (
             <>
-              <div className="rounded-xl bg-green-50 border border-green-200 p-3 text-xs text-green-700">
+              <div className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30 p-3 text-xs text-green-700 dark:text-green-300">
                 <p className="font-semibold mb-1">Where to find these?</p>
                 <p>Go to <span className="font-mono">Meta Business Manager → WhatsApp Manager → API Setup</span> to get your Phone Number ID, WABA ID, and Permanent Token.</p>
               </div>
@@ -136,24 +133,24 @@ function ChannelForm({ initial, onSave, onClose }: {
               <Field label="WABA ID (WhatsApp Business Account ID)" field="waba_id" placeholder="1234567890123456" />
               <Field label="Phone Number ID" field="phone_number_id" placeholder="9876543210987" />
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">Permanent Access Token *</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Permanent Access Token *</label>
                 <div className="relative">
                   <input value={form.access_token} onChange={set("access_token")} placeholder="EAAxxxxxx…"
                     type={showToken ? "text" : "password"}
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 pr-10 text-sm text-gray-800 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
-                  <button onClick={() => setShowToken((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    className="w-full rounded-lg border border-border bg-muted px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  <button onClick={() => setShowToken((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
               {/* Webhook URL info */}
-              <div className="rounded-xl bg-gray-50 border border-gray-200 p-3">
-                <p className="text-xs font-semibold text-gray-700 mb-1">Webhook URL (set this in Meta)</p>
-                <p className="text-xs font-mono text-gray-500 break-all">
+              <div className="rounded-xl bg-muted border border-border p-3">
+                <p className="text-xs font-semibold text-foreground mb-1">Webhook URL (set this in Meta)</p>
+                <p className="text-xs font-mono text-muted-foreground break-all">
                   {typeof window !== "undefined" ? window.location.origin : "https://yourdomain.com"}/api/webhooks/whatsapp
                 </p>
-                <p className="text-xs text-gray-400 mt-1">Verify token: <span className="font-mono font-medium text-gray-600">automateos_whatsapp</span></p>
+                <p className="text-xs text-muted-foreground mt-1">Verify token: <span className="font-mono font-medium text-foreground">automateos_whatsapp</span></p>
               </div>
             </>
           )}
@@ -161,17 +158,17 @@ function ChannelForm({ initial, onSave, onClose }: {
           {/* Telegram fields */}
           {provider === "telegram" && (
             <>
-              <div className="rounded-xl bg-sky-50 border border-sky-200 p-3 text-xs text-sky-700">
+              <div className="rounded-xl bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800/30 p-3 text-xs text-sky-700 dark:text-sky-300">
                 <p className="font-semibold mb-1">Get your bot token</p>
                 <p>Open Telegram → search <span className="font-mono">@BotFather</span> → /newbot → copy the token.</p>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">Bot Token *</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Bot Token *</label>
                 <div className="relative">
                   <input value={form.bot_token} onChange={set("bot_token")} placeholder="1234567890:AAFxxxxx…"
                     type={showToken ? "text" : "password"}
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 pr-10 text-sm text-gray-800 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
-                  <button onClick={() => setShowToken((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    className="w-full rounded-lg border border-border bg-muted px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  <button onClick={() => setShowToken((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
@@ -182,18 +179,18 @@ function ChannelForm({ initial, onSave, onClose }: {
           {/* Twilio SMS fields */}
           {provider === "sms_twilio" && (
             <>
-              <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-xs text-red-700">
+              <div className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 p-3 text-xs text-red-700 dark:text-red-300">
                 <p className="font-semibold mb-1">Twilio credentials</p>
                 <p>Find these at <span className="font-mono">console.twilio.com → Account Info</span></p>
               </div>
               <Field label="Account SID *" field="twilio_account_sid" placeholder="ACxxxxxxxxxxxxxxx" />
               <div>
-                <label className="mb-1 block text-xs font-medium text-gray-600">Auth Token *</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">Auth Token *</label>
                 <div className="relative">
                   <input value={form.twilio_auth_token} onChange={set("twilio_auth_token")} placeholder="your_auth_token"
                     type={showToken ? "text" : "password"}
-                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 pr-10 text-sm text-gray-800 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
-                  <button onClick={() => setShowToken((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    className="w-full rounded-lg border border-border bg-muted px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+                  <button onClick={() => setShowToken((v) => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                     {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
@@ -202,14 +199,14 @@ function ChannelForm({ initial, onSave, onClose }: {
             </>
           )}
 
-          <div className="flex items-center gap-2 rounded-lg bg-gray-50 p-2.5 text-xs text-gray-500">
-            <Shield className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+          <div className="flex items-center gap-2 rounded-lg bg-muted p-2.5 text-xs text-muted-foreground">
+            <Shield className="h-3.5 w-3.5 shrink-0" />
             Your credentials are stored encrypted and never exposed to the browser.
           </div>
         </div>
 
         <div className="mt-5 flex gap-2">
-          <button onClick={onClose} className="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">Cancel</button>
+          <button onClick={onClose} className="flex-1 rounded-lg border border-border py-2 text-sm font-medium text-muted-foreground hover:bg-muted">Cancel</button>
           <button onClick={submit} className="flex-1 rounded-lg bg-green-500 py-2 text-sm font-semibold text-white hover:bg-green-600">
             {initial ? "Save Changes" : "Connect Channel"}
           </button>
@@ -229,23 +226,23 @@ function ChannelCard({ channel, onEdit, onDelete }: {
   const meta = PROVIDER_META[channel.provider];
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${meta.bg}`}>
             <span className={meta.color}>{meta.icon}</span>
           </div>
           <div>
-            <p className="font-semibold text-gray-900 text-sm">{channel.label}</p>
-            <p className="text-xs text-gray-400">{meta.label}</p>
+            <p className="font-semibold text-foreground text-sm">{channel.label}</p>
+            <p className="text-xs text-muted-foreground">{meta.label}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           {channel.status === "active"
-            ? <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700"><Wifi className="h-3 w-3" />Active</span>
+            ? <span className="flex items-center gap-1 rounded-full bg-green-50 dark:bg-green-900/20 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400"><Wifi className="h-3 w-3" />Active</span>
             : channel.status === "error"
-            ? <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600"><AlertCircle className="h-3 w-3" />Error</span>
-            : <span className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"><WifiOff className="h-3 w-3" />Disconnected</span>
+            ? <span className="flex items-center gap-1 rounded-full bg-red-50 dark:bg-red-900/20 px-2 py-0.5 text-xs font-medium text-red-600 dark:text-red-400"><AlertCircle className="h-3 w-3" />Error</span>
+            : <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"><WifiOff className="h-3 w-3" />Disconnected</span>
           }
         </div>
       </div>
@@ -253,57 +250,57 @@ function ChannelCard({ channel, onEdit, onDelete }: {
       <div className="space-y-2 mb-4">
         {channel.phone_number && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Phone</span>
-            <span className="text-xs font-medium text-gray-700">{channel.phone_number}</span>
+            <span className="text-xs text-muted-foreground">Phone</span>
+            <span className="text-xs font-medium text-foreground">{channel.phone_number}</span>
           </div>
         )}
         {channel.waba_id && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">WABA ID</span>
-            <span className="text-xs font-mono text-gray-600">{channel.waba_id}</span>
+            <span className="text-xs text-muted-foreground">WABA ID</span>
+            <span className="text-xs font-mono text-foreground/80">{channel.waba_id}</span>
           </div>
         )}
         {channel.phone_number_id && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Phone Number ID</span>
-            <span className="text-xs font-mono text-gray-600">{channel.phone_number_id}</span>
+            <span className="text-xs text-muted-foreground">Phone Number ID</span>
+            <span className="text-xs font-mono text-foreground/80">{channel.phone_number_id}</span>
           </div>
         )}
         {channel.access_token && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Access Token</span>
-            <span className="text-xs font-mono text-gray-500">{mask(channel.access_token)}</span>
+            <span className="text-xs text-muted-foreground">Access Token</span>
+            <span className="text-xs font-mono text-muted-foreground">{mask(channel.access_token)}</span>
           </div>
         )}
         {channel.bot_token && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Bot Token</span>
-            <span className="text-xs font-mono text-gray-500">{mask(channel.bot_token)}</span>
+            <span className="text-xs text-muted-foreground">Bot Token</span>
+            <span className="text-xs font-mono text-muted-foreground">{mask(channel.bot_token)}</span>
           </div>
         )}
         {channel.twilio_account_sid && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Twilio SID</span>
-            <span className="text-xs font-mono text-gray-500">{mask(channel.twilio_account_sid)}</span>
+            <span className="text-xs text-muted-foreground">Twilio SID</span>
+            <span className="text-xs font-mono text-muted-foreground">{mask(channel.twilio_account_sid)}</span>
           </div>
         )}
       </div>
 
       {/* Webhook URL for WhatsApp */}
       {channel.provider === "whatsapp" && (
-        <div className="mb-3 rounded-lg bg-gray-50 px-3 py-2">
-          <p className="text-xs text-gray-400 mb-1">Webhook URL</p>
-          <p className="text-xs font-mono text-gray-600 break-all">
+        <div className="mb-3 rounded-lg bg-muted border border-border px-3 py-2">
+          <p className="text-xs text-muted-foreground mb-1">Webhook URL</p>
+          <p className="text-xs font-mono text-foreground/80 break-all">
             {typeof window !== "undefined" ? window.location.origin : ""}/api/webhooks/whatsapp
           </p>
         </div>
       )}
 
       <div className="flex gap-2">
-        <button onClick={onEdit} className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50">
+        <button onClick={onEdit} className="flex-1 flex items-center justify-center gap-1.5 rounded-lg border border-border py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted">
           <Pencil className="h-3.5 w-3.5" /> Edit
         </button>
-        <button onClick={onDelete} className="flex items-center justify-center gap-1.5 rounded-lg border border-red-100 px-3 py-1.5 text-xs font-medium text-red-500 hover:bg-red-50">
+        <button onClick={onDelete} className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 dark:border-red-800/30 px-3 py-1.5 text-xs font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20">
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -361,8 +358,8 @@ export default function ChannelsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Channel Settings</h1>
-          <p className="text-sm text-gray-400 mt-0.5">Connect your WhatsApp, Telegram, or SMS accounts. Each client uses their own credentials.</p>
+          <h1 className="text-xl font-bold text-foreground">Channel Settings</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Connect your WhatsApp, Telegram, or SMS accounts. Each client uses their own credentials.</p>
         </div>
         <button onClick={() => { setEditing(null); setShowForm(true); }} className="flex items-center gap-1.5 rounded-xl bg-green-500 px-4 py-2 text-sm font-semibold text-white hover:bg-green-600 shadow-sm">
           <Plus className="h-4 w-4" /> Connect Channel
@@ -374,10 +371,10 @@ export default function ChannelsPage() {
           <div className="h-7 w-7 animate-spin rounded-full border-4 border-green-500 border-t-transparent" />
         </div>
       ) : channels.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 py-20 text-center">
-          <Plug className="h-12 w-12 text-gray-200 mb-3" />
-          <p className="text-sm font-semibold text-gray-600">No channels connected yet</p>
-          <p className="text-xs text-gray-400 mt-1 mb-4">Connect WhatsApp to start sending and receiving messages</p>
+        <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border py-20 text-center">
+          <Plug className="h-12 w-12 text-muted-foreground/30 mb-3" />
+          <p className="text-sm font-semibold text-foreground">No channels connected yet</p>
+          <p className="text-xs text-muted-foreground mt-1 mb-4">Connect WhatsApp to start sending and receiving messages</p>
           <button onClick={() => setShowForm(true)} className="flex items-center gap-1.5 rounded-xl bg-green-500 px-4 py-2 text-sm font-semibold text-white hover:bg-green-600">
             <Plus className="h-4 w-4" /> Connect WhatsApp
           </button>
@@ -396,9 +393,9 @@ export default function ChannelsPage() {
       )}
 
       {/* How it works */}
-      <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
-        <p className="text-sm font-semibold text-blue-900 mb-3">How per-client channels work</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs text-blue-700">
+      <div className="rounded-2xl border border-blue-200 dark:border-blue-800/30 bg-blue-50 dark:bg-blue-900/20 p-5">
+        <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3">How per-client channels work</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs text-blue-700 dark:text-blue-300">
           <div className="flex gap-2">
             <span className="font-bold text-blue-500">1.</span>
             <p>You enter your own WhatsApp Business API credentials (from Meta Business Manager)</p>
