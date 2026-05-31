@@ -7,10 +7,10 @@
 | Week | Theme | Branch | Status |
 |------|-------|--------|--------|
 | Week 1 | Auth + DB + Route Guards | `week1/auth-db-middleware` | ✅ Complete |
-| Week 2 | Security + Tests + API Keys | `week2/security-tests-apikeys` | 🔲 Next |
-| Week 3 | Inbox + Real-time Messaging | `week3/inbox-realtime` | 🔲 Planned |
-| Week 4 | Campaigns + Automation | `week4/campaigns-automation` | 🔲 Planned |
-| Week 5 | Billing + Stripe | `week5/billing-stripe` | 🔲 Planned |
+| Week 2 | Security + Tests + API Keys | `week2/security-tests-apikeys` | ✅ Complete |
+| Week 3 | Inbox + Real-time Messaging | `week3/inbox-realtime` | ✅ Complete |
+| Week 4 | Campaigns + Automation | `week4/campaigns-automation` | ✅ Complete |
+| Week 5 | Billing + Stripe | `week5/billing-stripe` | 🔲 Next |
 | Week 6 | Settings + Knowledge Base | `week6/settings-knowledge` | 🔲 Planned |
 | Week 7 | AI Insights + Dashboard | `week7/ai-insights-dashboard` | 🔲 Planned |
 | Week 8 | Polish + Production Launch | `week8/polish-launch` | 🔲 Planned |
@@ -19,11 +19,11 @@
 
 **Week 1 (Done):** Real auth, multi-tenant DB, API security, Anthropic/Gemini providers, notifications persistence, atomic credit deduction, webhook token system.
 
-**Week 2:** Encrypt channel credentials, Vitest test suite (auth, credits, RLS), API keys + webhook logs persisted to Supabase, overview dashboard real data.
+**Week 2 (Done):** Vitest setup with 15 passing tests, channel credential encryption (`encrypt_credential` SQL), API keys persisted to Supabase (`api-keys/route.ts`), webhook events log (`webhook-events/route.ts`).
 
-**Week 3:** WhatsApp Business webhook receiver saves messages to DB, real-time inbox via Supabase Realtime, conversation open/close/assign, contacts page live data.
+**Week 3 (Done):** WhatsApp Business webhook receiver with message ingestion (`whatsapp-parser.ts`), real-time inbox via Supabase Realtime subscription, conversation open/close/assign (`conversations/[id]/route.ts`), contacts page live data.
 
-**Week 4:** Campaign builder writes to DB, n8n workflow template deployment, retargeting automation, follow-up sequences, leads pipeline board live data.
+**Week 4 (Done):** Campaign builder reads/writes live Supabase data, automations toggle persisted to DB, retargeting page wired to real leads, campaign status transition tests passing.
 
 **Week 5:** Stripe checkout + webhooks, subscription table, plan limit enforcement on credits + API calls, billing page live metering.
 

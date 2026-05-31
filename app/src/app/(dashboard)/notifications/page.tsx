@@ -26,7 +26,7 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [items, setItems] = useState<Notification[]>([]);
 
-  useEffect(() => { seedDemoNotifications(TENANT); refresh(); }, []);
+  useEffect(() => { seedDemoNotifications(TENANT); refresh(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   function refresh() { listNotifications(TENANT, USER, { unreadOnly: filter === "unread" }).then(setItems); }
   useEffect(refresh, [filter]);  // eslint-disable-line
 

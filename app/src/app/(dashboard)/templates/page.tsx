@@ -1,27 +1,44 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Select } from "@/components/ui/Input";
-import { Sparkles, Star, Download, Clock } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
+import { Sparkles, Star, Download, Clock, CheckCircle, Loader2 } from "lucide-react";
 import { listTemplates, type MarketplaceTemplate } from "@/lib/templates";
 import type { VerticalId } from "@/lib/verticals";
 import { VERTICAL_LIST } from "@/lib/verticals";
+import { installTemplate, type InstallResult } from "@/lib/template-install";
 import { toast } from "sonner";
 
 export default function TemplatesPage() {
   const [vertical, setVertical] = useState<VerticalId | "all">("all");
   const [category, setCategory] = useState<MarketplaceTemplate["category"] | "all">("all");
   const [tier, setTier] = useState<"all" | "free" | "paid">("all");
+  const [installing, setInstalling] = useState<string | null>(null);
+  const [result, setResult] = useState<{ template: MarketplaceTemplate; data: InstallResult } | null>(null);
 
   const templates = useMemo(() => listTemplates({
     vertical: vertical === "all" ? null : vertical,
     category: category === "all" ? undefined : category,
     free: tier === "all" ? undefined : tier === "free",
   }), [vertical, category, tier]);
+
+  async function handleInstall(t: MarketplaceTemplate) {
+    setInstalling(t.id);
+    try {
+      const data = await installTemplate(t.id);
+      setResult({ template: t, data });
+    } catch {
+      toast.error(`Failed to install ${t.name}`);
+    } finally {
+      setInstalling(null);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -85,11 +102,62 @@ export default function TemplatesPage() {
                 <span><Download className="mr-1 inline h-3 w-3" /> {t.installs.toLocaleString()}</span>
                 <span><Clock className="mr-1 inline h-3 w-3" /> ~{t.estSetupMinutes} min</span>
               </div>
-              <Button leftIcon={<Sparkles className="h-4 w-4" />} onClick={() => toast.success(`Installed: ${t.name}`)}>Install</Button>
+              <Button
+                leftIcon={installing === t.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                disabled={installing !== null}
+                onClick={() => handleInstall(t)}
+              >
+                {installing === t.id ? "Installing…" : "Install"}
+              </Button>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {result && (
+        <Modal
+          open={true}
+          onClose={() => setResult(null)}
+          title={`"${result.template.name}" installed`}
+          description="The following items were created in your workspace."
+          size="md"
+          footer={<Button onClick={() => setResult(null)}>Done</Button>}
+        >
+          <div className="space-y-4 text-sm">
+            {result.data.automations.length > 0 && (
+              <Section label="Automations" href="/automations" items={result.data.automations.map((a) => a.name)} />
+            )}
+            {result.data.campaigns.length > 0 && (
+              <Section label="Campaigns" href="/campaigns" items={result.data.campaigns.map((c) => c.name)} />
+            )}
+            {result.data.faq.length > 0 && (
+              <Section label="FAQ items" href="/faq" items={result.data.faq.map((f) => f.question)} />
+            )}
+            {result.data.followUps.length > 0 && (
+              <Section label="Follow-up sequences" href="/follow-ups" items={result.data.followUps.map((f) => f.name)} />
+            )}
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function Section({ label, href, items }: { label: string; href: string; items: string[] }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <p className="font-medium text-foreground">{label}</p>
+        <Link href={href} className="text-xs text-primary hover:underline">View all →</Link>
+      </div>
+      <ul className="space-y-1">
+        {items.map((name) => (
+          <li key={name} className="flex items-center gap-2 text-muted-foreground">
+            <CheckCircle className="h-3.5 w-3.5 shrink-0 text-success" />
+            {name}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

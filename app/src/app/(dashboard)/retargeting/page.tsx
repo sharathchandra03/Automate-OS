@@ -52,7 +52,7 @@ export default function RetargetingPage() {
                 <CardTitle className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" /> {lead.name}
                 </CardTitle>
-                <Badge tone={lead.temperature === "hot" ? "success" : lead.temperature === "cold" ? "danger" : "info"}>
+                <Badge tone={lead.temperature === "hot" ? "success" : lead.temperature === "cold" ? "destructive" : "info"}>
                   {lead.temperature}
                 </Badge>
               </CardHeader>

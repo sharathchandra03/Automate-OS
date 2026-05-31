@@ -119,6 +119,7 @@ export const NAV: NavGroup[] = [
       { label: "AI Assistant", href: "/ai-assistant",  icon: Sparkles,        description: "Your business copilot" },
       { label: "Knowledge",    href: "/knowledge",     icon: BookOpen,        description: "Train AI on your docs",               feature: "knowledge_base" },
       { label: "Templates",    href: "/templates",     icon: Store,           description: "Pre-built workflows & campaigns",     feature: "templates_marketplace" },
+      { label: "AI Agents",    href: "/agents",        icon: Bot,             description: "Configure automated AI agents",        feature: "ai_agents" },
     ],
   },
   {

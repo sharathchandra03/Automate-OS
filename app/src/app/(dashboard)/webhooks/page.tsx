@@ -34,6 +34,7 @@ interface WebhookEvent {
 function toLogEntry(e: WebhookEvent): WebhookLogEntry {
   return {
     id: e.id,
+    tenantId: TENANT,
     at: e.created_at,
     direction: "inbound",
     source: e.source,

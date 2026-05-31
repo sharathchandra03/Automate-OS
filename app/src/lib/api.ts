@@ -41,6 +41,7 @@ import type {
   CreditType,
   FAQItem,
   FollowUp,
+  FollowUpStatus,
   Integration,
   Lead,
   Message,
@@ -835,6 +836,40 @@ export async function updateAutomation(id: string, patch: Partial<Automation>): 
     .single();
   if (error) return null;
   return data as Automation;
+}
+
+export async function createAutomation(input: Partial<Automation> & { name: string }): Promise<Automation> {
+  const a: Automation = {
+    id: uid("auto"),
+    organization_id: memory.org.id,
+    name: input.name,
+    description: input.description ?? "",
+    trigger: input.trigger ?? "incoming_whatsapp",
+    webhook_url: input.webhook_url ?? "",
+    status: input.status ?? "active",
+    last_run_at: null,
+    runs_today: 0,
+    success_rate: 0,
+    created_at: nowIso(),
+  };
+  memory.automations.unshift(a);
+  return delay(a, 150);
+}
+
+export async function createFollowUp(input: Partial<FollowUp> & { name: string }): Promise<FollowUp> {
+  const f: FollowUp = {
+    id: uid("fu"),
+    organization_id: memory.org.id,
+    name: input.name,
+    trigger: input.trigger ?? "new_lead",
+    steps: input.steps ?? [],
+    status: (input.status as FollowUpStatus) ?? "active",
+    active_count: 0,
+    conversion_count: 0,
+    created_at: nowIso(),
+  };
+  memory.followups.unshift(f);
+  return delay(f, 150);
 }
 
 export async function updateOrganization(patch: Partial<Organization>): Promise<Organization> {
