@@ -45,13 +45,13 @@ function ResponseNodeInner({ id, data }: NodeProps<ResponseNodeData>) {
   }
 
   return (
-    <div className="w-[280px] rounded-xl border border-gray-200 bg-white shadow-lg overflow-visible">
+    <div className="w-[280px] rounded-xl border border-border bg-card shadow-lg overflow-visible">
       {/* Target handle (left) */}
       <Handle
         type="target"
         position={Position.Left}
         id="in"
-        style={{ background: "#22c55e", width: 12, height: 12, border: "2px solid white" }}
+        style={{ background: "#22c55e", width: 12, height: 12, border: "2px solid hsl(var(--card))" }}
       />
 
       {/* Header */}
@@ -62,9 +62,9 @@ function ResponseNodeInner({ id, data }: NodeProps<ResponseNodeData>) {
 
       {/* Body text */}
       <div className="px-3 pt-3 pb-1">
-        <p className="mb-1 text-[10px] font-semibold uppercase text-gray-400 tracking-wide">Add body text</p>
+        <p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground tracking-wide">Add body text</p>
         <textarea
-          className="w-full resize-none rounded-md border border-gray-200 bg-gray-50 p-2 text-xs text-gray-700 focus:border-[#22c55e] focus:outline-none focus:ring-1 focus:ring-[#22c55e]"
+          className="w-full resize-none rounded-md border border-border bg-muted p-2 text-xs text-foreground focus:border-[#22c55e] focus:outline-none focus:ring-1 focus:ring-[#22c55e]"
           rows={3}
           value={data.body}
           placeholder="Type your message…"
@@ -74,19 +74,19 @@ function ResponseNodeInner({ id, data }: NodeProps<ResponseNodeData>) {
 
       {/* Options */}
       <div className="px-3 pb-1">
-        <p className="mb-1.5 text-[10px] font-semibold uppercase text-gray-400 tracking-wide">Configure Input options</p>
+        <p className="mb-1.5 text-[10px] font-semibold uppercase text-muted-foreground tracking-wide">Configure Input options</p>
         <div className="space-y-1">
           {data.options.map((opt, idx) => (
             <div key={opt.id} className="relative flex items-center gap-1.5">
               {/* Option number + input */}
-              <span className="shrink-0 text-xs font-medium text-gray-500 w-4">{idx + 1}.</span>
+              <span className="shrink-0 text-xs font-medium text-muted-foreground w-4">{idx + 1}.</span>
               <input
-                className="flex-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-700 focus:border-[#22c55e] focus:outline-none focus:ring-1 focus:ring-[#22c55e]"
+                className="flex-1 rounded-md border border-border bg-muted px-2 py-1 text-xs text-foreground focus:border-[#22c55e] focus:outline-none focus:ring-1 focus:ring-[#22c55e]"
                 value={opt.label}
                 onChange={(e) => updateOptionLabel(opt.id, e.target.value)}
               />
               <button
-                className="shrink-0 text-gray-300 hover:text-red-400 transition-colors"
+                className="shrink-0 text-muted-foreground/50 hover:text-red-400 transition-colors"
                 onClick={() => removeOption(opt.id)}
               >
                 <Trash2 className="h-3 w-3" />
@@ -101,7 +101,7 @@ function ResponseNodeInner({ id, data }: NodeProps<ResponseNodeData>) {
                   background: "#22c55e",
                   width: 12,
                   height: 12,
-                  border: "2px solid white",
+                  border: "2px solid hsl(var(--card))",
                   top: "auto",
                   right: -20,
                   position: "absolute",
@@ -121,10 +121,10 @@ function ResponseNodeInner({ id, data }: NodeProps<ResponseNodeData>) {
       </div>
 
       {/* Variable */}
-      <div className="border-t border-gray-100 px-3 py-2">
-        <p className="mb-1 text-[10px] font-semibold uppercase text-gray-400 tracking-wide">Save reply in a variable</p>
+      <div className="border-t border-border px-3 py-2">
+        <p className="mb-1 text-[10px] font-semibold uppercase text-muted-foreground tracking-wide">Save reply in a variable</p>
         <input
-          className="w-full rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-500 focus:border-[#22c55e] focus:outline-none focus:ring-1 focus:ring-[#22c55e]"
+          className="w-full rounded-md border border-border bg-muted px-2 py-1 text-xs text-muted-foreground focus:border-[#22c55e] focus:outline-none focus:ring-1 focus:ring-[#22c55e]"
           placeholder="Enter value"
           value={data.variable}
           onChange={(e) => update({ variable: e.target.value })}

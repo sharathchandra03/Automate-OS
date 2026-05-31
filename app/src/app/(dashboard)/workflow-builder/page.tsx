@@ -331,23 +331,23 @@ function FlowCanvas() {
   }
 
   return (
-    <div className="-mx-4 -my-6 sm:-mx-6 lg:-mx-8 lg:-my-8 flex h-[calc(100vh-64px)] flex-col overflow-hidden bg-white">
+    <div className="-mx-4 -my-6 sm:-mx-6 lg:-mx-8 lg:-my-8 flex h-[calc(100vh-64px)] flex-col overflow-hidden bg-background">
       {/* Top bar */}
-      <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-2 shadow-sm">
+      <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-4 py-2 shadow-sm">
         <div className="flex items-center gap-3">
-          <button className="text-gray-400 hover:text-gray-600" onClick={() => history.back()}>←</button>
+          <button className="text-muted-foreground hover:text-foreground" onClick={() => history.back()}>←</button>
           <input
-            className="rounded border border-transparent bg-white px-2 py-1 text-sm font-semibold text-gray-800 focus:border-gray-300 focus:outline-none"
+            className="rounded border border-transparent bg-card px-2 py-1 text-sm font-semibold text-foreground focus:border-border focus:outline-none"
             value={flowName}
             onChange={(e) => setFlowName(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full border px-3 py-1 text-xs text-gray-500">
+          <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
             {edges.length}/50 connectors
           </span>
           <button
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted"
             onClick={() => toast.success("Flow started!")}
           >
             <Play className="h-4 w-4 text-[#22c55e]" /> Test
@@ -370,10 +370,10 @@ function FlowCanvas() {
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left sidebar */}
-        <div className="flex w-[168px] shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-white">
+        <div className="flex w-[168px] shrink-0 flex-col overflow-y-auto border-r border-border bg-card">
           {/* Triggers */}
           <button
-            className="flex items-center justify-between px-3 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:bg-gray-50"
+            className="flex items-center justify-between px-3 py-2.5 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted"
             onClick={() => setTriggersOpen((v) => !v)}
           >
             Triggers
@@ -388,11 +388,11 @@ function FlowCanvas() {
           )}
 
           {/* Divider */}
-          <div className="my-1 border-t border-gray-200" />
+          <div className="my-1 border-t border-border" />
 
           {/* Actions */}
           <button
-            className="flex items-center justify-between px-3 py-2.5 text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:bg-gray-50"
+            className="flex items-center justify-between px-3 py-2.5 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted"
             onClick={() => setActionsOpen((v) => !v)}
           >
             Actions
@@ -423,12 +423,18 @@ function FlowCanvas() {
             deleteKeyCode="Delete"
             proOptions={{ hideAttribution: true }}
           >
-            <Background variant={BackgroundVariant.Dots} gap={16} size={1} color="#cbd5e1" style={{ backgroundColor: "#f1f5f9" }} />
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={16}
+              size={1}
+              color="hsl(var(--border))"
+              style={{ backgroundColor: "hsl(var(--muted))" }}
+            />
             <Controls showInteractive={false} />
             <MiniMap
               nodeColor={() => "#22c55e"}
-              maskColor="rgba(240,240,240,0.6)"
-              style={{ border: "1px solid #e2e8f0", borderRadius: 8 }}
+              maskColor="hsl(var(--muted) / 0.7)"
+              style={{ border: "1px solid hsl(var(--border))", borderRadius: 8, backgroundColor: "hsl(var(--card))" }}
             />
           </ReactFlow>
         </div>
@@ -449,12 +455,12 @@ function SidebarNode({
     <div
       draggable
       onDragStart={(e) => onDragStart(e, item)}
-      className="flex cursor-grab items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-2 hover:border-[#22c55e] hover:bg-green-50 active:cursor-grabbing transition-colors select-none [color-scheme:light]"
+      className="flex cursor-grab items-center gap-2 rounded-lg border border-border bg-muted px-2.5 py-2 hover:border-[#22c55e] hover:bg-green-50 dark:hover:bg-green-900/20 active:cursor-grabbing transition-colors select-none"
     >
       <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white ${item.color}`}>
         {item.icon}
       </div>
-      <span className="text-[11px] leading-tight text-gray-600">{item.label}</span>
+      <span className="text-[11px] leading-tight text-muted-foreground">{item.label}</span>
     </div>
   );
 }

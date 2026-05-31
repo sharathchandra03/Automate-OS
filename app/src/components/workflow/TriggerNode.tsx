@@ -29,7 +29,7 @@ function TriggerNodeInner({ data }: NodeProps<TriggerNodeData>) {
   const meta = TRIGGER_META[data.trigger] ?? TRIGGER_META.incoming_webhook;
 
   return (
-    <div className="w-[200px] rounded-xl border-2 border-[#22c55e] bg-white shadow-lg overflow-hidden">
+    <div className="w-[200px] rounded-xl border-2 border-[#22c55e] bg-card shadow-lg overflow-hidden">
       {/* Header */}
       <div className={`flex items-center gap-2 px-3 py-2 ${meta.bg}`}>
         <span className={meta.color}>{meta.icon}</span>
@@ -38,8 +38,8 @@ function TriggerNodeInner({ data }: NodeProps<TriggerNodeData>) {
 
       {/* Body */}
       <div className="px-3 py-2.5">
-        <p className="text-xs font-medium text-gray-700">{data.label}</p>
-        <p className="mt-0.5 text-[10px] text-gray-400">When this happens</p>
+        <p className="text-xs font-medium text-foreground">{data.label}</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">When this happens</p>
       </div>
 
       {/* Source handle */}
@@ -47,7 +47,7 @@ function TriggerNodeInner({ data }: NodeProps<TriggerNodeData>) {
         type="source"
         position={Position.Right}
         id="out"
-        style={{ background: "#22c55e", width: 12, height: 12, border: "2px solid white" }}
+        style={{ background: "#22c55e", width: 12, height: 12, border: "2px solid hsl(var(--card))" }}
       />
     </div>
   );

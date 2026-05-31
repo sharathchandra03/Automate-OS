@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 /**
  * WhatsApp CRM Inbox - 3-panel layout
@@ -110,11 +110,11 @@ const CONTACTS: Contact[] = [
 ];
 
 const TAG_COLORS: Record<TagColor, string> = {
-  red:    "bg-red-100 text-red-600",
-  yellow: "bg-yellow-100 text-yellow-700",
-  green:  "bg-green-100 text-green-700",
-  gray:   "bg-gray-100 text-gray-500",
-  blue:   "bg-blue-100 text-blue-600",
+  red:    "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
+  yellow: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
+  green:  "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+  gray:   "bg-muted text-muted-foreground",
+  blue:   "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400",
 };
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -178,8 +178,6 @@ export default function InboxPage() {
     const channel = supabase
       .channel("inbox-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
-        // New inbound message — contacts list would refresh here from getConversations()
-        // For now surfaces a toast so the agent knows it's wired
         toast.info("New message received");
       })
       .subscribe();
@@ -191,7 +189,6 @@ export default function InboxPage() {
     setContacts((prev) =>
       prev.map((c) => c.id === contactId ? { ...c, status: "expired" } : c)
     );
-    // If the contact has a real conversation_id from Supabase, close it there too
     toast.success("Conversation closed");
   }
 
@@ -212,13 +209,13 @@ export default function InboxPage() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="-mx-4 -my-6 sm:-mx-6 lg:-mx-8 lg:-my-8 flex h-[calc(100vh-64px)] overflow-hidden bg-[#f0f2f5]">
+    <div className="-mx-4 -my-6 sm:-mx-6 lg:-mx-8 lg:-my-8 flex h-[calc(100vh-64px)] overflow-hidden bg-muted">
 
       {/* ══ LEFT: Contact list ══════════════════════════════════════════════ */}
-      <div className="flex w-[340px] shrink-0 flex-col border-r border-gray-200 bg-white">
+      <div className="flex w-[340px] shrink-0 flex-col border-r border-border bg-card">
 
         {/* WABA header */}
-        <div className="flex items-center gap-2 border-b border-gray-100 bg-[#1a1a2e] px-3 py-2.5">
+        <div className="flex items-center gap-2 border-b border-border bg-[#1a1a2e] px-3 py-2.5">
           <MessageCircle className="h-4 w-4 text-[#25D366] shrink-0" />
           <div className="min-w-0">
             <p className="text-xs font-semibold text-white truncate">(91)-9535513344</p>
@@ -233,14 +230,14 @@ export default function InboxPage() {
         </div>
 
         {/* Search */}
-        <div className="border-b border-gray-100 p-2">
-          <div className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5">
-            <div className="flex items-center gap-1 text-xs text-gray-500 shrink-0 border-r border-gray-200 pr-2 mr-1">
+        <div className="border-b border-border p-2">
+          <div className="flex items-center gap-1.5 rounded-lg border border-border bg-muted px-2 py-1.5">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0 border-r border-border pr-2 mr-1">
               Name/Phone <ChevronDown className="h-3 w-3" />
             </div>
-            <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+            <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <input
-              className="flex-1 bg-transparent text-xs text-gray-700 placeholder-gray-400 focus:outline-none"
+              className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
               placeholder="Search by name or phone"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -249,10 +246,10 @@ export default function InboxPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-3 py-1.5">
-          <div className="flex items-center gap-1 text-xs font-medium text-gray-700">
+        <div className="flex items-center justify-between border-b border-border px-3 py-1.5">
+          <div className="flex items-center gap-1 text-xs font-medium text-foreground">
             All Chats ({filtered.length})
-            <ChevronDown className="h-3 w-3 text-gray-400" />
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
           </div>
           <div className="flex items-center gap-1.5 text-xs text-[#5B5BF7] font-medium">
             {totalUnread > 0 && <span>{totalUnread} Unread</span>}
@@ -263,18 +260,17 @@ export default function InboxPage() {
         </div>
 
         {/* Contact list */}
-        <ul className="flex-1 overflow-y-auto divide-y divide-gray-50">
+        <ul className="flex-1 overflow-y-auto divide-y divide-border">
           {filtered.map((c, i) => {
-            // Group headers
             const showToday = i === 0;
             const showYesterday = i === 1;
             return (
               <li key={c.id}>
-                {showToday && <div className="bg-gray-50 px-3 py-1 text-[11px] text-gray-400 font-medium">Today</div>}
-                {showYesterday && <div className="bg-gray-50 px-3 py-1 text-[11px] text-gray-400 font-medium">Yesterday</div>}
+                {showToday && <div className="bg-muted px-3 py-1 text-[11px] text-muted-foreground font-medium">Today</div>}
+                {showYesterday && <div className="bg-muted px-3 py-1 text-[11px] text-muted-foreground font-medium">Yesterday</div>}
                 <button
                   onClick={() => setActiveId(c.id)}
-                  className={`flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 ${activeId === c.id ? "bg-purple-50 border-l-2 border-[#5B5BF7]" : ""}`}
+                  className={`flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-muted ${activeId === c.id ? "bg-accent border-l-2 border-[#5B5BF7]" : ""}`}
                 >
                   <div className="relative shrink-0">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#5B5BF7] text-sm font-bold text-white">
@@ -288,13 +284,13 @@ export default function InboxPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-gray-800 truncate">{c.name}</p>
-                      <span className="text-[10px] text-gray-400 shrink-0 ml-1">{c.lastAt}</span>
+                      <p className="text-sm font-semibold text-foreground truncate">{c.name}</p>
+                      <span className="text-[10px] text-muted-foreground shrink-0 ml-1">{c.lastAt}</span>
                     </div>
-                    <p className="truncate text-xs text-gray-500">{c.lastMsg}</p>
+                    <p className="truncate text-xs text-muted-foreground">{c.lastMsg}</p>
                     <div className="mt-1 flex items-center gap-1 flex-wrap">
                       {c.assignee === null && (
-                        <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
+                        <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
                           <UserCheck className="h-2.5 w-2.5" /> Unassigned
                         </span>
                       )}
@@ -316,31 +312,31 @@ export default function InboxPage() {
       <div className="flex flex-1 flex-col min-w-0">
 
         {/* Thread header */}
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5 shadow-sm">
+        <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-4 py-2.5 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5B5BF7] text-sm font-bold text-white shrink-0">
               {active.name[0]}
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <p className="text-sm font-semibold text-gray-800">{active.name} ({active.phone})</p>
-                <button className="text-gray-400 hover:text-gray-600"><Edit2 className="h-3.5 w-3.5" /></button>
+                <p className="text-sm font-semibold text-foreground">{active.name} ({active.phone})</p>
+                <button className="text-muted-foreground hover:text-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
               </div>
             </div>
             {active.status === "expired" && (
-              <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-600">Expired</span>
+              <span className="rounded-full bg-red-100 dark:bg-red-900/30 px-2.5 py-0.5 text-xs font-semibold text-red-600 dark:text-red-400">Expired</span>
             )}
             {active.status === "pending" && (
-              <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-700">Pending</span>
+              <span className="rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-2.5 py-0.5 text-xs font-semibold text-yellow-700 dark:text-yellow-400">Pending</span>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"><Star className="h-4 w-4" /></button>
-            <button className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"><Tag className="h-4 w-4" /></button>
-            <button className="rounded-lg border border-gray-200 p-1.5 text-gray-500 hover:bg-gray-50"><MoreHorizontal className="h-4 w-4" /></button>
+            <button className="rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-muted"><Star className="h-4 w-4" /></button>
+            <button className="rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-muted"><Tag className="h-4 w-4" /></button>
+            <button className="rounded-lg border border-border p-1.5 text-muted-foreground hover:bg-muted"><MoreHorizontal className="h-4 w-4" /></button>
             <button
               onClick={() => setShowDetails((v) => !v)}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-[#5B5BF7] hover:bg-purple-50"
+              className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-[#5B5BF7] hover:bg-accent"
             >
               {showDetails ? "CLOSE DETAILS ×" : "OPEN DETAILS →"}
             </button>
@@ -356,8 +352,8 @@ export default function InboxPage() {
 
         {/* Bottom bar */}
         {active.status === "expired" ? (
-          <div className="shrink-0 border-t border-gray-200 bg-white">
-            <div className="flex items-start gap-3 bg-amber-50 px-4 py-2.5 text-xs text-amber-700">
+          <div className="shrink-0 border-t border-border bg-card">
+            <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-400">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-500" />
               <p>User initiated conversations lasts for 24 hours only. You can reopen conversation using a template, but unless user replies to you, you will not be able reply to them without a template message.</p>
               <button
@@ -368,9 +364,9 @@ export default function InboxPage() {
               </button>
             </div>
             {/* Comment box */}
-            <div className="flex items-center gap-2 border-t border-gray-100 px-3 py-2">
+            <div className="flex items-center gap-2 border-t border-border px-3 py-2">
               <input
-                className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:border-[#5B5BF7] focus:outline-none"
+                className="flex-1 rounded-lg border border-border bg-muted px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-[#5B5BF7] focus:outline-none"
                 placeholder="Add a comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -382,12 +378,12 @@ export default function InboxPage() {
             </div>
           </div>
         ) : (
-          <div className="shrink-0 border-t border-gray-200 bg-white px-3 py-2">
+          <div className="shrink-0 border-t border-border bg-card px-3 py-2">
             <div className="flex items-center gap-2">
-              <button className="text-gray-400 hover:text-gray-600"><Paperclip className="h-4 w-4" /></button>
+              <button className="text-muted-foreground hover:text-foreground"><Paperclip className="h-4 w-4" /></button>
               <input
                 ref={inputRef}
-                className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:border-[#5B5BF7] focus:outline-none"
+                className="flex-1 rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-[#5B5BF7] focus:outline-none"
                 placeholder="Type a message…"
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
@@ -407,21 +403,21 @@ export default function InboxPage() {
 
       {/* ══ RIGHT: Contact details ══════════════════════════════════════════ */}
       {showDetails && (
-        <div className="flex w-[280px] shrink-0 flex-col border-l border-gray-200 bg-white overflow-y-auto">
+        <div className="flex w-[280px] shrink-0 flex-col border-l border-border bg-card overflow-y-auto">
 
           {/* Avatar */}
-          <div className="flex flex-col items-center gap-2 border-b border-gray-100 py-5">
+          <div className="flex flex-col items-center gap-2 border-b border-border py-5">
             <div className="relative">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#5B5BF7] text-xl font-bold text-white">
                 {active.name[0]}
               </div>
               <span className="absolute bottom-0 right-0 text-base">{active.flag}</span>
             </div>
-            <p className="font-semibold text-gray-800">{active.name}</p>
-            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+            <p className="font-semibold text-foreground">{active.name}</p>
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <span>{active.flag}</span>
               <span>{active.phone}</span>
-              <button className="text-gray-300 hover:text-gray-500" onClick={() => { navigator.clipboard.writeText(active.phone); toast.success("Copied!"); }}>
+              <button className="text-muted-foreground/50 hover:text-muted-foreground" onClick={() => { navigator.clipboard.writeText(active.phone); toast.success("Copied!"); }}>
                 <Copy className="h-3.5 w-3.5" />
               </button>
               <button className="text-[#25D366] hover:text-green-600">
@@ -431,33 +427,33 @@ export default function InboxPage() {
           </div>
 
           {/* Custom attributes */}
-          <div className="border-b border-gray-100 px-4 py-3">
+          <div className="border-b border-border px-4 py-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Custom Attributes</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Custom Attributes</p>
               <div className="flex items-center gap-1">
-                <button className="text-gray-400 hover:text-gray-600"><Edit2 className="h-3.5 w-3.5" /></button>
-                <button className="text-gray-400 hover:text-gray-600"><Plus className="h-3.5 w-3.5" /></button>
+                <button className="text-muted-foreground hover:text-foreground"><Edit2 className="h-3.5 w-3.5" /></button>
+                <button className="text-muted-foreground hover:text-foreground"><Plus className="h-3.5 w-3.5" /></button>
               </div>
             </div>
             <div className="space-y-2">
               {(["name", "phone", "email"] as const).map((field) => (
-                <div key={field} className="flex items-center justify-between rounded-lg border border-gray-200 px-3 py-2">
+                <div key={field} className="flex items-center justify-between rounded-lg border border-border px-3 py-2">
                   <div className="min-w-0">
-                    <p className="text-[10px] capitalize text-gray-400">{field === "phone" ? "Phone no." : field}</p>
+                    <p className="text-[10px] capitalize text-muted-foreground">{field === "phone" ? "Phone no." : field}</p>
                     {editAttr === field ? (
                       <input
                         autoFocus
-                        className="w-full text-xs text-gray-800 focus:outline-none bg-transparent"
+                        className="w-full text-xs text-foreground focus:outline-none bg-transparent"
                         value={active.attrs[field]}
                         onChange={(e) => updateAttr(field, e.target.value)}
                         onBlur={() => setEditAttr(null)}
                         onKeyDown={(e) => e.key === "Enter" && setEditAttr(null)}
                       />
                     ) : (
-                      <p className="text-xs font-medium text-gray-800 truncate">{active.attrs[field] || "-"}</p>
+                      <p className="text-xs font-medium text-foreground truncate">{active.attrs[field] || "-"}</p>
                     )}
                   </div>
-                  <button className="ml-2 shrink-0 text-gray-300 hover:text-gray-500" onClick={() => setEditAttr(field)}>
+                  <button className="ml-2 shrink-0 text-muted-foreground/50 hover:text-muted-foreground" onClick={() => setEditAttr(field)}>
                     <Edit2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -466,10 +462,10 @@ export default function InboxPage() {
           </div>
 
           {/* Assignee */}
-          <div className="border-b border-gray-100 px-4 py-3">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Assigned To</p>
+          <div className="border-b border-border px-4 py-3">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Assigned To</p>
             <button
-              className="flex w-full items-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs text-gray-400 hover:border-[#5B5BF7] hover:text-[#5B5BF7]"
+              className="flex w-full items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:border-[#5B5BF7] hover:text-[#5B5BF7]"
               onClick={() => toast.info("Assignment coming soon")}
             >
               <UserCheck className="h-3.5 w-3.5" />
@@ -478,13 +474,13 @@ export default function InboxPage() {
           </div>
 
           {/* Tags */}
-          <div className="border-b border-gray-100 px-4 py-3">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Tags</p>
+          <div className="border-b border-border px-4 py-3">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Tags</p>
             <div className="flex flex-wrap gap-1">
               {active.tags.map((t) => (
                 <span key={t.label} className={`rounded px-2 py-0.5 text-[11px] font-medium ${TAG_COLORS[t.color]}`}>{t.label}</span>
               ))}
-              <button className="rounded border border-dashed border-gray-300 px-2 py-0.5 text-[11px] text-gray-400 hover:border-[#5B5BF7] hover:text-[#5B5BF7]" onClick={() => toast.info("Tag editor coming soon")}>
+              <button className="rounded border border-dashed border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:border-[#5B5BF7] hover:text-[#5B5BF7]" onClick={() => toast.info("Tag editor coming soon")}>
                 + Add tag
               </button>
             </div>
@@ -492,19 +488,19 @@ export default function InboxPage() {
 
           {/* Comments */}
           <div className="px-4 py-3">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Comments</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">Comments</p>
             {active.comments.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-2">No comments added</p>
+              <p className="text-xs text-muted-foreground text-center py-2">No comments added</p>
             ) : (
               <ul className="space-y-1.5 mb-2">
                 {active.comments.map((c, i) => (
-                  <li key={i} className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700">{c}</li>
+                  <li key={i} className="rounded-lg bg-muted px-3 py-2 text-xs text-foreground">{c}</li>
                 ))}
               </ul>
             )}
             <div className="flex items-center gap-1.5 mt-2">
               <input
-                className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:border-[#5B5BF7] focus:outline-none"
+                className="flex-1 rounded-lg border border-border bg-muted px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:border-[#5B5BF7] focus:outline-none"
                 placeholder="Add a comment…"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -529,30 +525,29 @@ function MessageBubble({ msg }: { msg: Msg }) {
   if (msg.type === "system") {
     return (
       <div className="flex justify-center">
-        <span className="rounded-full bg-gray-200 px-3 py-1 text-[10px] text-gray-500">{msg.text}</span>
+        <span className="rounded-full bg-muted px-3 py-1 text-[10px] text-muted-foreground">{msg.text}</span>
       </div>
     );
   }
 
   return (
     <div className={`flex flex-col ${isMe ? "items-end" : "items-start"} gap-0.5`}>
-      {/* Date label (first message of day or on demand) */}
-      <span className="text-[10px] text-gray-400">{msg.at}</span>
+      <span className="text-[10px] text-muted-foreground">{msg.at}</span>
 
       {msg.type === "buttons" ? (
         /* Interactive button message */
         <div className="w-[280px]">
-          <div className="rounded-t-2xl rounded-bl-2xl bg-white border border-gray-200 shadow-sm overflow-hidden">
+          <div className="rounded-t-2xl rounded-bl-2xl bg-card border border-border shadow-sm overflow-hidden">
             {/* Body text */}
             <div className="px-3 py-2.5">
-              <p className="whitespace-pre-line text-sm text-gray-800">{msg.text}</p>
+              <p className="whitespace-pre-line text-sm text-foreground">{msg.text}</p>
             </div>
             {/* Buttons */}
-            <div className="border-t border-gray-100">
+            <div className="border-t border-border">
               {msg.buttons?.map((btn, i) => (
                 <button
                   key={i}
-                  className="flex w-full items-center justify-center border-b border-gray-100 bg-[#4f46e5] px-3 py-2 text-sm font-medium text-white last:border-0 hover:bg-indigo-700 transition-colors"
+                  className="flex w-full items-center justify-center border-b border-border bg-[#4f46e5] px-3 py-2 text-sm font-medium text-white last:border-0 hover:bg-indigo-700 transition-colors"
                 >
                   {btn}
                 </button>
@@ -560,13 +555,13 @@ function MessageBubble({ msg }: { msg: Msg }) {
             </div>
           </div>
           <div className="flex items-center justify-between mt-0.5 px-1">
-            {msg.sentVia && <span className="text-[10px] text-gray-400 italic">Sent via {msg.sentVia}</span>}
+            {msg.sentVia && <span className="text-[10px] text-muted-foreground italic">Sent via {msg.sentVia}</span>}
             <CheckCheck className="h-3 w-3 text-[#25D366] ml-auto" />
           </div>
         </div>
       ) : (
         /* Plain text bubble */
-        <div className={`max-w-[70%] rounded-2xl px-3 py-2 ${isMe ? "rounded-br-none bg-[#5B5BF7] text-white" : "rounded-bl-none bg-white border border-gray-200 text-gray-800"} shadow-sm`}>
+        <div className={`max-w-[70%] rounded-2xl px-3 py-2 ${isMe ? "rounded-br-none bg-[#5B5BF7] text-white" : "rounded-bl-none bg-card border border-border text-foreground"} shadow-sm`}>
           <p className="text-sm leading-snug">{msg.text}</p>
           {isMe && (
             <div className="mt-0.5 flex justify-end">
