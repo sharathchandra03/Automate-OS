@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { createClient } from "@supabase/supabase-js";
 import { sendMessage } from "@/lib/comms";
 import { getActiveChannel, deductCredits } from "@/lib/api";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { trackEvent } from "@/lib/analytics";
+
+function svcClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 const schema = z.object({
   channel: z.enum(["whatsapp", "sms", "telegram"]),
@@ -42,6 +51,27 @@ export async function POST(req: NextRequest) {
   }
 
   const { channel, to, text, conversationId, creditType = "conversation" } = parsed.data;
+
+  // Check wallet has credits before sending (deductCredits already enforces atomically,
+  // but this gives a clear 402 before incurring any cost)
+  if (orgId && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const { data: walletRow } = await svcClient()
+      .from("wallets")
+      .select("conversation_credits, broadcast_credits")
+      .eq("organization_id", orgId)
+      .single();
+
+    const balance = creditType === "broadcast"
+      ? (walletRow?.broadcast_credits ?? 0)
+      : (walletRow?.conversation_credits ?? 0);
+
+    if (balance < 1) {
+      return NextResponse.json(
+        { ok: false, error: "Insufficient credits. Please top up your wallet." },
+        { status: 402 }
+      );
+    }
+  }
 
   // Look up the org's active channel credentials
   const providerMap = { whatsapp: "whatsapp", sms: "sms_twilio", telegram: "telegram" } as const;
