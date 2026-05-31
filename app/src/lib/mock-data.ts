@@ -38,6 +38,7 @@ export const mockOrg: Organization = {
   industry: "Real Estate",
   timezone: "Asia/Kolkata",
   brand_color: "#5B5BF7",
+  ai_tone: "professional",
   logo_url: null,
   business_hours: "Mon–Sat 9:00–19:00",
   created_at: daysAgo(120),
