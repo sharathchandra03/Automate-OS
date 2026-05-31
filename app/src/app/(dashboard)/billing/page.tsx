@@ -1,49 +1,117 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { PLAN_LIST, fmtLimit, getPlan, type PlanId } from "@/lib/plans";
-import { totalsFor, pctOf, seedDemoMetering } from "@/lib/billing/meter";
-import { summarizeUsage, seedDemoUsage } from "@/lib/ai/usage";
-import { CheckCircle2, Sparkles, Zap, Shield, CreditCard } from "lucide-react";
+import { PLAN_LIST, fmtLimit, type PlanId } from "@/lib/plans";
+import { pctOf } from "@/lib/billing/meter";
+import { CheckCircle2, Sparkles, Zap, Shield, CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-const DEMO_TENANT = "org_demo";
+import { getWallet, getCreditTransactions } from "@/lib/api";
+import type { Wallet, CreditTransaction } from "@/lib/types";
 
 export default function BillingPage() {
-  // Seed demo numbers once
-  useMemo(() => { seedDemoMetering(DEMO_TENANT); seedDemoUsage(DEMO_TENANT); }, []);
-  const [currentPlan, setCurrentPlan] = useState<PlanId>("pro");
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
+  const [plan, setPlan] = useState<string>("free");
   const [billing, setBilling] = useState<"month" | "year">("month");
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
-  const plan = getPlan(currentPlan);
-  const totals = totalsFor(DEMO_TENANT, 30);
-  const aiSummary = summarizeUsage(DEMO_TENANT, 30);
+  useEffect(() => {
+    getWallet().then(setWallet).catch(() => {});
+    getCreditTransactions().then(setTransactions).catch(() => {});
+    fetch("/api/billing/subscription")
+      .then((r) => r.json())
+      .then((d) => setPlan(d.plan ?? "free"))
+      .catch(() => {});
+  }, []);
+
+  async function handleUpgrade(targetPlan: string) {
+    setLoadingPlan(targetPlan);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan: targetPlan }),
+      });
+      const { url, error } = await res.json();
+      if (error) { toast.error(error); return; }
+      if (url) window.location.href = url;
+    } catch {
+      toast.error("Failed to start checkout. Please try again.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  }
+
+  async function handleManage() {
+    setLoadingPortal(true);
+    try {
+      const res = await fetch("/api/billing/portal", { method: "POST" });
+      const { url, error } = await res.json();
+      if (error) { toast.error(error); return; }
+      if (url) window.location.href = url;
+    } catch {
+      toast.error("Failed to open billing portal. Please try again.");
+    } finally {
+      setLoadingPortal(false);
+    }
+  }
+
+  const convCredits = wallet?.conversation_credits ?? 0;
+  const bcCredits   = wallet?.broadcast_credits ?? 0;
 
   const usageRows = [
-    { key: "Contacts",   used: 4_280,                          limit: plan.limits.contacts,            unit: "" },
-    { key: "Automations",used: totals.automations_run,         limit: plan.limits.automationsPerMonth, unit: "/mo" },
-    { key: "AI tokens",  used: aiSummary.totalTokens,          limit: plan.limits.aiTokensPerMonth,    unit: "/mo" },
-    { key: "Messages",   used: totals.messages_sent,           limit: 999_999,                          unit: "/mo" },
-    { key: "Storage",    used: Math.round(totals.storage_gb*10)/10, limit: plan.limits.storageGB,        unit: "GB" },
-    { key: "Users",      used: 4,                              limit: plan.limits.users,                unit: "" },
+    {
+      key: "Conversation credits",
+      used: convCredits,
+      limit: 1000,
+      unit: "",
+      description: "Credits used for 1-on-1 messaging",
+    },
+    {
+      key: "Broadcast credits",
+      used: bcCredits,
+      limit: 500,
+      unit: "",
+      description: "Credits used for campaign sends",
+    },
   ];
+
+  const recentTx = transactions.slice(0, 5);
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Billing & plan"
         description="Pick a plan, monitor usage, and manage payment."
-        actions={<Button variant="secondary" leftIcon={<CreditCard className="h-4 w-4" />}>Manage payment</Button>}
+        actions={
+          <Button
+            variant="secondary"
+            leftIcon={loadingPortal ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+            onClick={handleManage}
+            disabled={loadingPortal}
+          >
+            Manage payment
+          </Button>
+        }
       />
 
+      {/* Credit Balance */}
       <Card>
         <CardHeader>
-          <CardTitle>Current usage (last 30 days)</CardTitle>
-          <CardDescription>You are on the <b>{plan.name}</b> plan.</CardDescription>
+          <CardTitle>Credit balance</CardTitle>
+          <CardDescription>
+            You are on the <b className="capitalize">{plan}</b> plan.
+            {wallet && (
+              <span className="ml-2 text-muted-foreground">
+                Last updated {new Date(wallet.updated_at).toLocaleDateString()}
+              </span>
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-5 md:grid-cols-2">
@@ -53,16 +121,21 @@ export default function BillingPage() {
               return (
                 <div key={r.key} className="rounded-xl border bg-card p-4">
                   <div className="flex items-baseline justify-between">
-                    <p className="text-sm font-medium">{r.key}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {fmtNumber(r.used)} / {fmtLimit(r.limit)}{r.unit}
+                    <div>
+                      <p className="text-sm font-medium">{r.key}</p>
+                      <p className="text-xs text-muted-foreground">{r.description}</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground font-mono">
+                      {fmtNumber(r.used)} credits
                     </p>
                   </div>
                   <div className="mt-2 h-2 w-full rounded-full bg-muted">
-                    <div className={`h-2 rounded-full ${tone}`} style={{ width: `${pct}%` }} />
+                    <div className={`h-2 rounded-full transition-all ${tone}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                   </div>
                   {pct >= 80 && (
-                    <p className="mt-2 text-xs text-amber-600">Approaching limit - consider upgrading.</p>
+                    <p className="mt-2 text-xs text-amber-600">
+                      Running low — consider upgrading your plan.
+                    </p>
                   )}
                 </div>
               );
@@ -71,18 +144,58 @@ export default function BillingPage() {
         </CardContent>
       </Card>
 
+      {/* Recent Transactions */}
+      {recentTx.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent transactions</CardTitle>
+            <CardDescription>Last 5 credit movements</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {recentTx.map((tx) => (
+                <div key={tx.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                  <div>
+                    <p className="font-medium capitalize">{tx.transaction_type}</p>
+                    <p className="text-xs text-muted-foreground">{tx.description}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-mono font-medium ${tx.amount > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                      {tx.amount > 0 ? "+" : ""}{tx.amount}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">{tx.credit_type}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Plan selector */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Plans</h2>
         <div className="inline-flex rounded-lg border p-1 text-sm">
-          <button onClick={() => setBilling("month")} className={`px-3 py-1.5 rounded-md ${billing==="month" ? "bg-foreground text-background" : ""}`}>Monthly</button>
-          <button onClick={() => setBilling("year")}  className={`px-3 py-1.5 rounded-md ${billing==="year"  ? "bg-foreground text-background" : ""}`}>Yearly · 2 months free</button>
+          <button
+            onClick={() => setBilling("month")}
+            className={`px-3 py-1.5 rounded-md ${billing === "month" ? "bg-foreground text-background" : ""}`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBilling("year")}
+            className={`px-3 py-1.5 rounded-md ${billing === "year" ? "bg-foreground text-background" : ""}`}
+          >
+            Yearly · 2 months free
+          </button>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {PLAN_LIST.map((p) => {
-          const current = p.id === currentPlan;
+          const current = p.id === (plan as PlanId);
           const price = billing === "year" ? p.pricePerYear : p.pricePerMonth;
+          const isPaid = ["starter", "growth", "pro"].includes(p.id);
           return (
             <Card key={p.id} className={p.highlight ? "border-primary shadow-md" : ""}>
               <CardHeader>
@@ -119,41 +232,28 @@ export default function BillingPage() {
                 <Button
                   className="w-full"
                   variant={current ? "secondary" : p.highlight ? "primary" : "outline"}
+                  disabled={current || loadingPlan === p.id}
+                  leftIcon={loadingPlan === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined}
                   onClick={() => {
-                    setCurrentPlan(p.id);
-                    toast.success(`Switched to ${p.name} (demo)`);
+                    if (current) return;
+                    if (p.id === "enterprise") {
+                      toast.info("Contact sales@automateos.com for enterprise pricing.");
+                      return;
+                    }
+                    if (isPaid) {
+                      handleUpgrade(p.id);
+                    } else {
+                      toast.info("You are already on the free plan.");
+                    }
                   }}
                 >
-                  {current ? "Current plan" : p.id === "enterprise" ? "Talk to sales" : "Switch to this plan"}
+                  {current ? "Current plan" : p.id === "enterprise" ? "Talk to sales" : `Upgrade to ${p.name}`}
                 </Button>
               </CardContent>
             </Card>
           );
         })}
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>AI usage & cost (last 30 days)</CardTitle>
-          <CardDescription>Tracked per feature, model, and tenant.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div>
-              <p className="text-xs uppercase text-muted-foreground">Total tokens</p>
-              <p className="text-2xl font-semibold">{fmtNumber(aiSummary.totalTokens)}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase text-muted-foreground">Estimated cost</p>
-              <p className="text-2xl font-semibold">${aiSummary.totalCostUsd.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase text-muted-foreground">Most used feature</p>
-              <p className="text-2xl font-semibold">{topKey(aiSummary.byFeature)}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -163,10 +263,4 @@ function fmtNumber(n: number): string {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 ? 1 : 0) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(n % 1_000 ? 1 : 0) + "k";
   return Math.round(n).toString();
-}
-
-function topKey(map: Record<string, { tokens: number }>): string {
-  let best = "-", bestN = -1;
-  for (const [k, v] of Object.entries(map)) if (v.tokens > bestN) { best = k; bestN = v.tokens; }
-  return best;
 }
