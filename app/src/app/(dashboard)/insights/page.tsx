@@ -10,6 +10,7 @@ import { listInsights, seedDemoInsights, type Insight } from "@/lib/ai/insights"
 import { demoHealth } from "@/lib/health-score";
 import { ArrowRight, Heart, Zap, AlertTriangle, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const TENANT = "org_demo";
 
@@ -19,7 +20,17 @@ const TONE: Record<Insight["level"], "muted" | "info" | "success" | "warning" | 
 
 export default function InsightsPage() {
   const [items, setItems] = useState<Insight[]>([]);
+  const [trends, setTrends] = useState<{ day: string; count: number }[]>([]);
+
   useEffect(() => { seedDemoInsights(TENANT); setItems(listInsights(TENANT)); }, []);
+
+  useEffect(() => {
+    fetch("/api/insights/trends")
+      .then((r) => r.json())
+      .then((d) => setTrends(d.trends ?? []))
+      .catch(() => null);
+  }, []);
+
   const health = useMemo(() => demoHealth(), []);
 
   const bandTone = ({
@@ -43,6 +54,25 @@ export default function InsightsPage() {
         <StatCard label="Won this week"  value={7}             delta={{ value: "+18%",       positive: true  }} icon={<Zap className="h-4 w-4" />} tone="primary" />
         <StatCard label="Health score"   value={health.score}  delta={{ value: health.band.replace("_", " "), positive: health.score >= 60 }} icon={<Heart className="h-4 w-4" />} />
       </div>
+
+      {trends.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Lead trend — last 30 days</CardTitle>
+            <CardDescription>Daily new leads from your database.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={trends}>
+                <XAxis dataKey="day" tick={{ fontSize: 11 }} tickFormatter={(v: string) => v.slice(5)} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={30} />
+                <Tooltip formatter={(v: number) => [v, "Leads"]} labelFormatter={(l: string) => `Day: ${l}`} />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="space-y-3">

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,7 +10,7 @@ import {
   Zap, CheckCircle, CalendarDays, BarChart3, Shield,
   TrendingUp, TrendingDown,
 } from "lucide-react";
-import { getAnalytics, getWallet, getConversations, getContacts } from "@/lib/api";
+import { getAnalytics, getWallet, getConversations, getContacts, getDashboardSummary, type DashboardSummary } from "@/lib/api";
 
 // ── Mock analytics data per (channel, days) ────────────────────────────────
 
@@ -169,6 +169,10 @@ export default function OverviewPage() {
   const { data: conversations } = useQuery({ queryKey: ["conversations"], queryFn: () => getConversations() });
   const { data: contacts } = useQuery({ queryKey: ["contacts"], queryFn: getContacts });
 
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+
+  useEffect(() => { getDashboardSummary().then(setSummary).catch(() => null); }, []);
+
   const [openStep, setOpenStep] = useState<number | null>(1);
   const [chatbotDays, setChatbotDays] = useState<DayKey>("7");
   const [msgChannel, setMsgChannel] = useState<ChannelKey>("WhatsApp");
@@ -220,6 +224,22 @@ export default function OverviewPage() {
               </Link>
             </div>
           </div>
+
+          {/* Real-time summary stats */}
+          {summary === null ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <MetricCard icon={<Users className="h-4 w-4" />} label="Total Leads" value={summary.total_leads} trend={summary.new_leads_7d > 0 ? summary.new_leads_7d : undefined} />
+              <MetricCard icon={<MessageCircle className="h-4 w-4" />} label="Open Conversations" value={summary.open_conversations} />
+              <MetricCard icon={<Send className="h-4 w-4" />} label="Messages Sent (7d)" value={summary.messages_sent_7d} />
+              <MetricCard icon={<TrendingUp className="h-4 w-4" />} label="Conversion Rate" value={summary.conversion_rate} suffix="%" />
+            </div>
+          )}
 
           {/* Setup steps */}
           <div className="space-y-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,15 @@ import { Modal } from "@/components/ui/Modal";
 import { Input, Label, Select, Textarea } from "@/components/ui/Input";
 import { FileDown, Mail, Calendar, Plus, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+
+interface ReportSummary {
+  status_breakdown: Record<string, number>;
+  channel_breakdown: Record<string, number>;
+  top_leads: { name: string; score: number; status: string; channel: string }[];
+}
+
+const PIE_COLORS = ["hsl(var(--primary))", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
 interface ScheduledReport {
   id: string;
@@ -34,6 +43,14 @@ export default function ReportsPage() {
   const [list, setList] = useState<ScheduledReport[]>(SAMPLE);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Partial<ScheduledReport>>({ name: "", schedule: "weekly", delivery: "email", format: "pdf", metrics: [], recipients: "" });
+  const [report, setReport] = useState<ReportSummary | null>(null);
+
+  useEffect(() => {
+    fetch("/api/reports/summary")
+      .then((r) => r.json())
+      .then((d) => { if (d.status_breakdown) setReport(d); })
+      .catch(() => null);
+  }, []);
 
   function add() {
     if (!draft.name || !draft.recipients || !(draft.metrics?.length)) return toast.error("Fill in name, recipients, and at least one metric");
@@ -49,6 +66,67 @@ export default function ReportsPage() {
         description="Recurring, branded summaries delivered to email, Slack, or WhatsApp."
         actions={<Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => setOpen(true)}>New report</Button>}
       />
+
+      {report && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lead status breakdown</CardTitle>
+              <CardDescription>Current distribution across all leads.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={Object.entries(report.status_breakdown).map(([name, value]) => ({ name, value }))}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={({ name, value }) => `${name}: ${value}`}
+                  >
+                    {Object.keys(report.status_breakdown).map((_, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Top leads by score</CardTitle>
+              <CardDescription>Highest-scored leads in your pipeline.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-muted-foreground border-b">
+                    <th className="pb-2">Name</th>
+                    <th className="pb-2">Score</th>
+                    <th className="pb-2">Status</th>
+                    <th className="pb-2">Channel</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.top_leads.map((lead, i) => (
+                    <tr key={i} className="border-b last:border-0">
+                      <td className="py-2 font-medium">{lead.name}</td>
+                      <td className="py-2">{lead.score}</td>
+                      <td className="py-2"><Badge tone="muted">{lead.status}</Badge></td>
+                      <td className="py-2 text-muted-foreground">{lead.channel}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {list.map((r) => (

@@ -7,11 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 import { Sparkles, Send, Loader2, Wand2 } from "lucide-react";
-import { ai, type AIMessage } from "@/lib/ai/provider";
-import { getPrompt } from "@/lib/ai/prompts";
-import { getVertical } from "@/lib/verticals";
-
-const TENANT = "org_demo";
+import type { AIMessage } from "@/lib/ai/provider";
 
 const SUGGESTIONS = [
   "Give me today's executive brief.",
@@ -39,16 +35,16 @@ export default function AiAssistantPage() {
     setMessages(next);
     setBusy(true);
     try {
-      const v = getVertical("generic");
-      const built = getPrompt("copilot.chat").build({
-        vertical: v,
-        data: { page: "ai-assistant", message: content, summary: "AutomateOS Copilot - full-page chat." },
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: content,
+          history: messages.map((m) => ({ role: m.role, content: m.content })),
+        }),
       });
-      const r = await ai.complete(
-        [{ role: "system", content: built.system }, ...next.filter((m) => m.role !== "assistant" || messages.length === 1)],
-        { tenantId: TENANT, feature: "copilot.chat" },
-      );
-      setMessages([...next, { role: "assistant", content: r.text }]);
+      const { reply } = await res.json();
+      setMessages([...next, { role: "assistant", content: reply ?? "Sorry, something went wrong." }]);
     } catch (err) {
       setMessages([...next, { role: "assistant", content: `Sorry - I hit an error: ${err instanceof Error ? err.message : String(err)}` }]);
     } finally {
@@ -61,7 +57,7 @@ export default function AiAssistantPage() {
       <PageHeader
         title="AI Assistant"
         description="Your business copilot - chat, draft, summarize, and ship."
-        actions={<Badge tone="primary"><Sparkles className="h-3 w-3" /> {ai.providerId}</Badge>}
+        actions={<Badge tone="primary"><Sparkles className="h-3 w-3" /> AI</Badge>}
       />
 
       <Card>

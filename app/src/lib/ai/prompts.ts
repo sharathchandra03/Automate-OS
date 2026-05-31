@@ -136,3 +136,25 @@ export function getPrompt(key: string): PromptDef {
   if (!p) throw new Error(`Unknown prompt: ${key}`);
   return p;
 }
+
+export function buildSystemPrompt(context?: {
+  recent_leads?: { name: string; status: string; score: number; channel: string }[];
+  wallet?: { conversation_credits: number; broadcast_credits: number };
+  plan?: string;
+}): string {
+  const base = `You are an AI assistant for AutomateOS, a CRM and automation platform.
+Help the user understand their leads, conversations, and automation performance.
+Be concise and actionable.`;
+
+  if (!context) return base;
+
+  const leadsSnippet = context.recent_leads?.length
+    ? `\n\nRecent leads (last 10): ${JSON.stringify(context.recent_leads)}`
+    : "";
+  const walletSnippet = context.wallet
+    ? `\n\nCredit balance — conversation: ${context.wallet.conversation_credits}, broadcast: ${context.wallet.broadcast_credits}`
+    : "";
+  const planSnippet = context.plan ? `\n\nCurrent plan: ${context.plan}` : "";
+
+  return base + leadsSnippet + walletSnippet + planSnippet;
+}

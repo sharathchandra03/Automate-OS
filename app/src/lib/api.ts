@@ -1870,3 +1870,60 @@ export async function deleteKnowledgeArticle(id: string): Promise<void> {
   const orgId = await getOrgId(supabase);
   await supabase.from("knowledge_articles").delete().eq("id", id).eq("organization_id", orgId);
 }
+
+// =========================================================================
+// Dashboard Summary
+// =========================================================================
+
+export interface DashboardSummary {
+  total_leads: number;
+  new_leads_7d: number;
+  open_conversations: number;
+  messages_sent_7d: number;
+  conversion_rate: number;
+  credit_balance: number;
+}
+
+export async function getDashboardSummary(): Promise<DashboardSummary> {
+  if (!HAS_SUPABASE) {
+    return delay({
+      total_leads: memory.leads.length,
+      new_leads_7d: memory.leads.filter(
+        (l) => l.created_at > new Date(Date.now() - 7 * 86400000).toISOString()
+      ).length,
+      open_conversations: memory.conversations.filter((c) => c.status === "open").length,
+      messages_sent_7d: 0,
+      conversion_rate: 0,
+      credit_balance: memory.wallet.conversation_credits,
+    });
+  }
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) throw new Error("Not connected");
+  const orgId = await getOrgId(supabase);
+  const since7d = new Date(Date.now() - 7 * 86400000).toISOString();
+
+  const [leadsAll, leadsNew, convOpen, msgSent, wallet] = await Promise.all([
+    supabase.from("leads").select("id", { count: "exact", head: true }).eq("organization_id", orgId),
+    supabase.from("leads").select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId).gte("created_at", since7d),
+    supabase.from("conversations").select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId).eq("status", "open"),
+    supabase.from("messages").select("id", { count: "exact", head: true })
+      .eq("organization_id", orgId).eq("direction", "outbound").gte("created_at", since7d),
+    supabase.from("wallets").select("conversation_credits").eq("organization_id", orgId).single(),
+  ]);
+
+  const total = leadsAll.count ?? 0;
+  const converted = (await supabase
+    .from("leads").select("id", { count: "exact", head: true })
+    .eq("organization_id", orgId).eq("status", "converted")).count ?? 0;
+
+  return {
+    total_leads: total,
+    new_leads_7d: leadsNew.count ?? 0,
+    open_conversations: convOpen.count ?? 0,
+    messages_sent_7d: msgSent.count ?? 0,
+    conversion_rate: total > 0 ? Math.round((converted / total) * 100) : 0,
+    credit_balance: (wallet.data?.conversation_credits as number) ?? 0,
+  };
+}

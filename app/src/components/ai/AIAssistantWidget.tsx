@@ -9,12 +9,8 @@ import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { ai, type AIMessage } from "@/lib/ai/provider";
-import { getPrompt } from "@/lib/ai/prompts";
-import { getVertical } from "@/lib/verticals";
+import type { AIMessage } from "@/lib/ai/provider";
 import { cn } from "@/lib/utils";
-
-const TENANT = "org_demo";
 
 export function AIAssistantWidget() {
   const [open, setOpen] = useState(false);
@@ -35,19 +31,16 @@ export function AIAssistantWidget() {
     setMessages(next);
     setBusy(true);
     try {
-      const built = getPrompt("copilot.chat").build({
-        vertical: getVertical("generic"),
-        data: {
-          page: typeof window === "undefined" ? "unknown" : window.location.pathname,
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           message: content,
-          summary: "AutomateOS floating Copilot",
-        },
+          history: messages.map((m) => ({ role: m.role, content: m.content })),
+        }),
       });
-      const r = await ai.complete(
-        [{ role: "system", content: built.system }, ...next],
-        { tenantId: TENANT, feature: "copilot.widget" },
-      );
-      setMessages([...next, { role: "assistant", content: r.text }]);
+      const { reply } = await res.json();
+      setMessages([...next, { role: "assistant", content: reply ?? "Sorry, something went wrong." }]);
     } catch (err) {
       setMessages([...next, { role: "assistant", content: `Sorry - ${err instanceof Error ? err.message : String(err)}` }]);
     } finally {
@@ -73,7 +66,7 @@ export function AIAssistantWidget() {
           <div className="flex items-center gap-2 border-b p-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <p className="text-sm font-semibold">Copilot</p>
-            <span className="ml-auto text-xs text-muted-foreground">{ai.providerId}</span>
+            <span className="ml-auto text-xs text-muted-foreground">AI</span>
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto p-3">
