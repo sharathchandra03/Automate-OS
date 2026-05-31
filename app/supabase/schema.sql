@@ -15,11 +15,17 @@ create table if not exists organizations (
   industry text,
   timezone text default 'UTC',
   brand_color text default '#5B5BF7',
+  ai_tone text default 'professional',
   logo_url text,
   business_hours text,
   created_at timestamptz not null default now(),
   deleted_at timestamptz
 );
+
+-- Week 6 migrations (idempotent)
+alter table if exists organizations add column if not exists brand_color text default '#5B5BF7';
+alter table if exists organizations add column if not exists ai_tone text default 'professional';
+alter table if exists organizations add column if not exists logo_url text;
 
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -503,4 +509,20 @@ create table if not exists webhook_events (
   error text,
   created_at timestamptz not null default now()
 );
+
+-- ============== Knowledge Base ==============
+
+create table if not exists knowledge_articles (
+  id uuid primary key default uuid_generate_v4(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  title text not null,
+  content text not null,
+  category text not null default 'General',
+  tags text[] not null default '{}',
+  published boolean not null default false,
+  created_by uuid references profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_knowledge_org on knowledge_articles(organization_id, created_at desc);
 create index if not exists idx_webhook_events_org_created on webhook_events(organization_id, created_at desc);

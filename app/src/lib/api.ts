@@ -43,6 +43,7 @@ import type {
   FollowUp,
   FollowUpStatus,
   Integration,
+  KnowledgeArticle,
   Lead,
   Message,
   OrgChannel,
@@ -67,7 +68,6 @@ const memory = {
   automations: [...mockAutomations],
   audit: [...mockAudit],
   analytics: { ...mockAnalytics },
-  // NEW
   contacts: [...mockContacts],
   contactLabels: [...mockContactLabels],
   orgChannels: [...mockOrgChannels],
@@ -76,6 +76,7 @@ const memory = {
   conversations: [...mockConversations],
   messages: [...mockMessages],
   workflows: [...mockWorkflows],
+  knowledgeArticles: [] as KnowledgeArticle[],
 };
 
 function delay<T>(value: T, ms = 120): Promise<T> {
@@ -1792,4 +1793,80 @@ export async function getActiveChannel(provider: OrgChannel["provider"]): Promis
     .single();
   if (error) return null;
   return data as OrgChannel;
+}
+
+// =========================================================================
+// Knowledge Base CRUD
+// =========================================================================
+
+export async function getKnowledgeArticles(): Promise<KnowledgeArticle[]> {
+  if (!HAS_SUPABASE) return delay([...memory.knowledgeArticles]);
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return delay([...memory.knowledgeArticles]);
+  const orgId = await getOrgId(supabase);
+  const { data, error } = await supabase
+    .from("knowledge_articles").select("*").eq("organization_id", orgId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data as KnowledgeArticle[];
+}
+
+export async function createKnowledgeArticle(input: { title: string; content: string; category?: string; tags?: string[] }): Promise<KnowledgeArticle> {
+  if (!HAS_SUPABASE) {
+    const a: KnowledgeArticle = {
+      id: uid("kb"),
+      organization_id: memory.org.id,
+      title: input.title,
+      content: input.content,
+      category: input.category ?? "General",
+      tags: input.tags ?? [],
+      published: false,
+      created_by: null,
+      created_at: nowIso(),
+      updated_at: nowIso(),
+    };
+    memory.knowledgeArticles.unshift(a);
+    return delay(a, 150);
+  }
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) throw new Error("Not connected");
+  const orgId = await getOrgId(supabase);
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase.from("knowledge_articles")
+    .insert([{
+      organization_id: orgId,
+      title: input.title,
+      content: input.content,
+      category: input.category ?? "General",
+      tags: input.tags ?? [],
+      created_by: user?.id ?? null,
+    }])
+    .select().single();
+  if (error) throw new Error(error.message);
+  return data as KnowledgeArticle;
+}
+
+export async function updateKnowledgeArticle(id: string, patch: Partial<{ title: string; content: string; category: string; published: boolean }>): Promise<void> {
+  if (!HAS_SUPABASE) {
+    const idx = memory.knowledgeArticles.findIndex((a) => a.id === id);
+    if (idx >= 0) memory.knowledgeArticles[idx] = { ...memory.knowledgeArticles[idx], ...patch, updated_at: nowIso() };
+    return;
+  }
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return;
+  const orgId = await getOrgId(supabase);
+  await supabase.from("knowledge_articles")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id).eq("organization_id", orgId);
+}
+
+export async function deleteKnowledgeArticle(id: string): Promise<void> {
+  if (!HAS_SUPABASE) {
+    memory.knowledgeArticles = memory.knowledgeArticles.filter((a) => a.id !== id);
+    return;
+  }
+  const supabase = createSupabaseBrowserClient();
+  if (!supabase) return;
+  const orgId = await getOrgId(supabase);
+  await supabase.from("knowledge_articles").delete().eq("id", id).eq("organization_id", orgId);
 }

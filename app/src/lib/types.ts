@@ -14,9 +14,23 @@ export interface Organization {
   industry: string;
   timezone: string;
   brand_color: string;
+  ai_tone: string;
   logo_url: string | null;
   business_hours: string | null;
   created_at: ISODate;
+}
+
+export interface KnowledgeArticle {
+  id: UUID;
+  organization_id: UUID;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  published: boolean;
+  created_by: UUID | null;
+  created_at: ISODate;
+  updated_at: ISODate;
 }
 
 export interface Profile {
