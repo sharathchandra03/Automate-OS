@@ -3,6 +3,9 @@ import "./globals.css";
 import "reactflow/dist/style.css";
 import { Providers } from "@/components/providers";
 import { APP_NAME } from "@/lib/config";
+import { validateEnv } from "@/lib/env";
+
+validateEnv();
 
 const META_TITLE       = "AutomateOS - WhatsApp Automation Platform for Indian Businesses";
 const META_DESCRIPTION = "AutomateOS is India's leading WhatsApp automation platform. Build chatbots, run campaigns, manage contacts, book appointments, and handle support - all from one dashboard. 14-day free trial, no credit card needed.";

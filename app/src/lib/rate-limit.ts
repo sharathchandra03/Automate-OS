@@ -55,3 +55,21 @@ export function tenantKey(tenantId: string, route: string): string {
 export function ipKey(ip: string, route: string): string {
   return `ip:${ip}:${route}`;
 }
+
+// ── Simple sliding-window helper for webhook routes ──────────────────────────
+
+interface SlidingBucket { count: number; resetAt: number; }
+const _sliding = new Map<string, SlidingBucket>();
+
+/** Returns true if the request is allowed, false if rate-limited. */
+export function rateLimit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  const bucket = _sliding.get(key);
+  if (!bucket || now > bucket.resetAt) {
+    _sliding.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  if (bucket.count >= limit) return false;
+  bucket.count++;
+  return true;
+}

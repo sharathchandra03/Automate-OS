@@ -14,6 +14,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { createLead, getLeads, updateLead } from "@/lib/api";
+import { SkeletonTable } from "@/components/ui/skeleton-card";
 import { triggerAutomation } from "@/lib/n8n";
 import { formatRelative } from "@/lib/utils";
 import type { Lead, LeadStatus, LeadTemperature } from "@/lib/types";
@@ -195,7 +196,7 @@ export default function LeadsPage() {
       {view === "table" && (
         <Card>
           {isLoading ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>
+            <div className="p-4"><SkeletonTable rows={6} /></div>
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={<Users className="h-5 w-5" />}
@@ -256,16 +257,16 @@ export default function LeadsPage() {
 
       {/* Board / Kanban view */}
       {view === "board" && (
-        <div className="flex gap-3 overflow-x-auto pb-4 min-h-[480px]">
+        <div className="flex flex-col md:flex-row gap-3 overflow-x-auto pb-4 min-h-[480px]">
           {isLoading ? (
-            <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">Loading…</div>
+            <div className="flex-1 p-4"><SkeletonTable rows={4} /></div>
           ) : (
             STATUSES.map((status) => {
               const col = filtered.filter((l) => l.status === status);
               return (
                 <div
                   key={status}
-                  className="flex-shrink-0 w-60 flex flex-col"
+                  className="min-w-[260px] md:min-w-0 md:flex-1 flex flex-col"
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, status)}
                 >

@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { createLead } from "@/lib/api";
 import { triggerAutomation } from "@/lib/n8n";
 import { HAS_SUPABASE } from "@/lib/config";
+import { rateLimit } from "@/lib/rate-limit";
 
 // =========================================================================
 // Public lead capture webhook.
@@ -18,6 +19,11 @@ function createServiceClient() {
 }
 
 export async function POST(req: NextRequest, ctx: { params: { token: string } }) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  if (!rateLimit(`leads-webhook:${ip}`, 60, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const { token } = ctx.params;
   if (!token || token.length < 8) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });

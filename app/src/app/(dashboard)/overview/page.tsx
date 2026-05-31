@@ -11,6 +11,7 @@ import {
   TrendingUp, TrendingDown,
 } from "lucide-react";
 import { getAnalytics, getWallet, getConversations, getContacts, getDashboardSummary, type DashboardSummary } from "@/lib/api";
+import { SkeletonStatGrid } from "@/components/ui/skeleton-card";
 
 // ── Mock analytics data per (channel, days) ────────────────────────────────
 
@@ -227,11 +228,7 @@ export default function OverviewPage() {
 
           {/* Real-time summary stats */}
           {summary === null ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />
-              ))}
-            </div>
+            <SkeletonStatGrid count={4} />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <MetricCard icon={<Users className="h-4 w-4" />} label="Total Leads" value={summary.total_leads} trend={summary.new_leads_7d > 0 ? summary.new_leads_7d : undefined} />

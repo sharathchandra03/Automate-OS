@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 import { parseWhatsAppPayload } from "@/lib/whatsapp-parser";
 import { trackEvent } from "@/lib/analytics";
+import { rateLimit } from "@/lib/rate-limit";
 
 function svc() {
   return createClient(
@@ -25,6 +26,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  if (!rateLimit(`wa-webhook:${ip}`, 120, 60_000)) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
   const body = await req.text();
 
   // Verify X-Hub-Signature-256

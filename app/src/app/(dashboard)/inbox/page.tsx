@@ -6,12 +6,13 @@
  */
 
 import { useRef, useState, useEffect } from "react";
+import { SkeletonCard } from "@/components/ui/skeleton-card";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   Search, Phone, Mail, Edit2, Copy, MoreHorizontal,
   ChevronDown, Star, Tag, UserCheck, Send, Paperclip,
   MessageCircle, Clock, CheckCheck, AlertCircle, Plus,
-  X, Filter, SlidersHorizontal,
+  X, Filter, SlidersHorizontal, ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -121,8 +122,18 @@ const TAG_COLORS: Record<TagColor, string> = {
 
 export default function InboxPage() {
   const supabase = createSupabaseBrowserClient();
-  const [contacts, setContacts] = useState<Contact[]>(CONTACTS);
-  const [activeId, setActiveId] = useState(CONTACTS[1].id);        // Aruna selected by default
+  const [loaded, setLoaded] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [activeId, setActiveId] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setContacts(CONTACTS);
+      setActiveId(CONTACTS[1].id);
+      setLoaded(true);
+    }, 400);
+    return () => clearTimeout(t);
+  }, []);        // Aruna selected by default
   const [search, setSearch] = useState("");
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
@@ -131,7 +142,7 @@ export default function InboxPage() {
   const [editAttr, setEditAttr] = useState<null | "name" | "phone" | "email">(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const active = contacts.find((c) => c.id === activeId)!;
+  const active = contacts.find((c) => c.id === activeId) ?? CONTACTS[0]!;
   const filtered = contacts.filter(
     (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search),
   );
@@ -212,7 +223,7 @@ export default function InboxPage() {
     <div className="-mx-4 -my-6 sm:-mx-6 lg:-mx-8 lg:-my-8 flex h-[calc(100vh-64px)] overflow-hidden bg-muted">
 
       {/* ══ LEFT: Contact list ══════════════════════════════════════════════ */}
-      <div className="flex w-[340px] shrink-0 flex-col border-r border-border bg-card">
+      <div className={`${activeId ? "hidden md:flex" : "flex"} w-full md:w-[340px] shrink-0 flex-col border-r border-border bg-card`}>
 
         {/* WABA header */}
         <div className="flex items-center gap-2 border-b border-border bg-[#1a1a2e] px-3 py-2.5">
@@ -260,7 +271,12 @@ export default function InboxPage() {
         </div>
 
         {/* Contact list */}
-        <ul className="flex-1 overflow-y-auto divide-y divide-border">
+        {!loaded ? (
+          <div className="space-y-3 p-4">
+            {[...Array(4)].map((_, i) => <SkeletonCard key={i} rows={2} />)}
+          </div>
+        ) : null}
+        <ul className={`flex-1 overflow-y-auto divide-y divide-border ${!loaded ? "hidden" : ""}`}>
           {filtered.map((c, i) => {
             const showToday = i === 0;
             const showYesterday = i === 1;
@@ -309,11 +325,14 @@ export default function InboxPage() {
       </div>
 
       {/* ══ CENTRE: Chat thread ═════════════════════════════════════════════ */}
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className={`${activeId ? "flex" : "hidden md:flex"} flex-1 flex-col min-w-0`}>
 
         {/* Thread header */}
         <div className="flex shrink-0 items-center justify-between border-b border-border bg-card px-4 py-2.5 shadow-sm">
           <div className="flex items-center gap-2">
+            <button className="md:hidden mr-1 text-muted-foreground hover:text-foreground" onClick={() => setActiveId("")}>
+              <ArrowLeft className="h-5 w-5" />
+            </button>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5B5BF7] text-sm font-bold text-white shrink-0">
               {active.name[0]}
             </div>
